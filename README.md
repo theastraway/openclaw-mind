@@ -132,6 +132,6 @@ MIT licensed. Source at [github.com/theastraway/openclaw-mind](https://github.co
 
 ## About
 
-Built by [Astrai AI, Inc.](https://www.m-i-n-d.ai) — makers of MIND, the world's first personal knowledge graph AI platform.
+Built by [Astra AI, Inc.](https://www.m-i-n-d.ai) — makers of MIND, the world's first personal knowledge graph AI platform.
 
 Patents pending: MIND-PAT-001 (MINDsense Emotional Intelligence Engine, App. No. 64/030,662) and MIND-PAT-002 (Cross-Agent Persistent Memory via Model Context Protocol).
