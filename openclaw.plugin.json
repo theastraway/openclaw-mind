@@ -1,0 +1,178 @@
+{
+  "id": "openclaw-mind",
+  "name": "MIND",
+  "description": "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
+  "version": "0.1.0",
+  "kind": "memory",
+  "skills": ["skills"],
+  "contracts": {
+    "tools": [
+      "mind_search",
+      "mind_add",
+      "mind_get",
+      "mind_list",
+      "mind_update",
+      "mind_delete",
+      "mind_query_graph",
+      "mind_recall_emotional",
+      "mind_context",
+      "mind_life",
+      "mind_crm_log"
+    ]
+  },
+  "providerAuthEnvVars": {
+    "mind": ["MIND_API_KEY"]
+  },
+  "providerAuthChoices": [
+    {
+      "provider": "mind",
+      "method": "api-key",
+      "choiceId": "mind-api-key",
+      "choiceLabel": "MIND API key",
+      "choiceHint": "Get your key at https://www.m-i-n-d.ai → Settings → Developer → Create API Key. Starts with mind_",
+      "groupId": "mind",
+      "groupLabel": "MIND",
+      "optionKey": "apiKey",
+      "cliFlag": "--mind-api-key",
+      "cliOption": "--mind-api-key <key>",
+      "cliDescription": "MIND Developer API key (mind_...)"
+    }
+  ],
+  "uiHints": {
+    "apiKey": {
+      "label": "MIND API Key",
+      "sensitive": true,
+      "placeholder": "mind_...",
+      "help": "Get your key at https://www.m-i-n-d.ai → Settings → Developer. Use a SecretRef ({\"source\":\"env\",\"provider\":\"default\",\"id\":\"MIND_API_KEY\"}) or ${MIND_API_KEY} instead of storing the key directly."
+    },
+    "baseUrl": {
+      "label": "MIND Base URL",
+      "placeholder": "https://www.m-i-n-d.ai",
+      "help": "Override only if self-hosting MIND. Default points to the MIND cloud."
+    },
+    "userId": {
+      "label": "Default User ID",
+      "placeholder": "default",
+      "help": "User ID for scoping memories. Usually leave blank — your API key is already user-scoped."
+    },
+    "autoCapture": {
+      "label": "Auto-Capture",
+      "help": "Automatically extract facts, entities, and emotional weights from each agent turn into the MIND knowledge graph."
+    },
+    "autoRecall": {
+      "label": "Auto-Recall",
+      "help": "Automatically inject relevant memories from the MIND knowledge graph before each agent turn."
+    },
+    "topK": {
+      "label": "Top K Recall",
+      "placeholder": "10",
+      "help": "Maximum number of memories to inject per turn. Default: 10"
+    },
+    "searchThreshold": {
+      "label": "Search Threshold",
+      "placeholder": "0.5",
+      "help": "Minimum similarity score for hybrid search results (0-1). Default: 0.5"
+    },
+    "queryMode": {
+      "label": "Query Mode",
+      "help": "MIND knowledge graph query mode. Options: hybrid (default, recommended), mix, global, local, naive."
+    },
+    "enableMindsense": {
+      "label": "MINDsense Emotional Encoding",
+      "help": "Use MINDsense to assign valence/arousal weights to captured memories. Higher emotional content gets deeper KG encoding."
+    },
+    "enableLifeIntegration": {
+      "label": "Life Management Integration",
+      "help": "Allow the agent to create MIND Life items (tasks, goals, calendar events) from conversations."
+    },
+    "enableCrmLogging": {
+      "label": "CRM Activity Logging",
+      "help": "Allow the agent to log contacts and interaction history to MIND CRM."
+    },
+    "skills": {
+      "label": "Agentic Memory Skills",
+      "advanced": true,
+      "help": "Enable skills-based memory protocols. Triage gates incoming facts, dream consolidates the KG periodically, emotional-encoding scores valence/arousal, graph-recall traverses entity relationships."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      },
+      "baseUrl": {
+        "type": "string"
+      },
+      "userId": {
+        "type": "string"
+      },
+      "autoCapture": {
+        "type": "boolean"
+      },
+      "autoRecall": {
+        "type": "boolean"
+      },
+      "topK": {
+        "type": "number"
+      },
+      "searchThreshold": {
+        "type": "number"
+      },
+      "queryMode": {
+        "type": "string",
+        "enum": ["hybrid", "mix", "global", "local", "naive"]
+      },
+      "enableMindsense": {
+        "type": "boolean"
+      },
+      "enableLifeIntegration": {
+        "type": "boolean"
+      },
+      "enableCrmLogging": {
+        "type": "boolean"
+      },
+      "skills": {
+        "type": "object",
+        "properties": {
+          "triage": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "importanceThreshold": { "type": "number" },
+              "credentialPatterns": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "recall": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "strategy": { "type": "string", "enum": ["always", "smart", "manual"] },
+              "tokenBudget": { "type": "number" },
+              "maxMemories": { "type": "number" }
+            }
+          },
+          "dream": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "auto": { "type": "boolean" },
+              "minHours": { "type": "number" },
+              "minSessions": { "type": "number" }
+            }
+          },
+          "emotionalEncoding": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "minValence": { "type": "number" },
+              "minArousal": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "required": []
+  }
+}
