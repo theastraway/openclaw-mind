@@ -56,7 +56,7 @@ Does this carry emotional weight that should influence encoding depth?
   - Surprises / anomalies → tag with `emotion:surprise`
 - **Low-priority emotional content** (still stored, normal encoding):
   - Routine factual updates without emotional charge
-- **Why this matters:** MIND's MINDsense engine uses valence/arousal scoring to determine how deeply content is encoded into the knowledge graph. Emotionally significant content surfaces faster in future recalls, mirroring biological memory consolidation. This is patented (MIND-PAT-001).
+- **Why this matters:** MIND's MINDsense engine uses valence/arousal scoring to determine how deeply content is encoded into the knowledge graph. Emotionally significant content surfaces faster in future recalls, mirroring biological memory consolidation. This is patent-pending.
 
 If a fact passes ALL 5 gates, store it via `mind_add` with appropriate tags.
 

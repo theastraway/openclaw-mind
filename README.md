@@ -1,6 +1,6 @@
 # @astramindapp/openclaw-mind
 
-**MIND personal knowledge graph for OpenClaw.** 11 tools, 4 skills, full lifecycle hooks. The most complete memory plugin for AI agents.
+**MIND personal knowledge graph for OpenClaw.** 13 tools, 4 skills, full lifecycle hooks. The most complete memory plugin for AI agents.
 
 Other memory plugins store text. **MIND understands it.**
 
@@ -12,7 +12,7 @@ openclaw plugins install @astramindapp/openclaw-mind
 
 - **True knowledge graph** — Every memory becomes entities + relationships, not flat text
 - **50+ AI models** — Switch between GPT, Claude, Gemini, Llama, DeepSeek, Grok mid-conversation
-- **MINDsense emotional intelligence** *(patented)* — Valence + arousal weighting determines encoding depth, mirroring biological memory
+- **MINDsense emotional intelligence** *(patent-pending)* — Valence + arousal weighting determines encoding depth, mirroring biological memory
 - **Autonomous learning** — 8 pattern detectors run daily on your KG, surface insights you didn't ask for
 - **Life management** — Goals, projects, tasks, calendar, all synced from agent conversations
 - **CRM** — Contacts and interaction history captured automatically
@@ -22,10 +22,10 @@ openclaw plugins install @astramindapp/openclaw-mind
 
 | Feature | MIND | Mem0 | Anthropic Memory MCP |
 |---------|------|------|----------------------|
-| Tools | **12** | 8 | 8 |
+| Tools | **13** | 8 | 8 |
 | Knowledge graph | ✅ true KG | ❌ vectors only | ❌ JSON |
 | 50+ AI models | ✅ | ❌ provider-agnostic but no UI | ❌ Claude only |
-| Emotional intelligence | ✅ MINDsense (patented) | ❌ | ❌ |
+| Emotional intelligence | ✅ MINDsense (patent-pending) | ❌ | ❌ |
 | Auto-recall before turn | ✅ | ✅ | ❌ |
 | Auto-capture after turn | ✅ | ✅ | ❌ |
 | Graph traversal queries | ✅ | ❌ | ❌ |
@@ -84,6 +84,7 @@ This reads `~/.openclaw/workspace/` and ingests `SOUL.md`, `IDENTITY.md`, `USER.
 | `mind_list` | Paginated list of memories |
 | `mind_update` | Update an existing memory |
 | `mind_delete` | Soft delete with retention policy |
+| `mind_folders` | Organize documents into folders — list, create, rename, move, delete, file documents |
 | `mind_query_graph` | Graph traversal queries — find connected entities |
 | `mind_recall_emotional` | MINDsense-weighted recall — emotionally salient memories first |
 | `mind_context` | Load persistent identity (soul, user, rules, priorities, recent) |
@@ -135,4 +136,4 @@ MIT licensed. Source at [github.com/theastraway/openclaw-mind](https://github.co
 
 Built by [Astra AI, Inc.](https://www.m-i-n-d.ai) — makers of MIND, the world's first personal knowledge graph AI platform.
 
-Patents pending: MIND-PAT-001 (MINDsense Emotional Intelligence Engine, App. No. 64/030,662) and MIND-PAT-002 (Cross-Agent Persistent Memory via Model Context Protocol).
+Patents pending.

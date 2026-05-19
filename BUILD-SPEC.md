@@ -138,7 +138,7 @@ We don't just match Mem0. We ship **11 tools (vs their 8)** and **4 skills (vs t
 | `mind_update` | ✅ | ✅ | parity |
 | `mind_delete` | ✅ | ✅ | parity |
 | `mind_query_graph` | ✅ traversal | ❌ | UNIQUE — true KG queries ("who is connected to X") |
-| `mind_recall_emotional` | ✅ MINDsense | ❌ | UNIQUE — patented emotional weighting |
+| `mind_recall_emotional` | ✅ MINDsense | ❌ | UNIQUE — patent-pending emotional weighting |
 | `mind_context` | ✅ structured (soul/user/rules/priorities/recent) | ❌ | UNIQUE — replaces Mem0's flat MEMORY.md import |
 | `mind_life` | ✅ tasks/calendar/goals | ❌ | UNIQUE — life management, not just memory |
 | `mind_crm_log` | ✅ contacts/activities | ❌ | UNIQUE — CRM, not just memory |

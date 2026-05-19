@@ -4,7 +4,7 @@ description: >
   UNIQUE TO MIND. Assigns MINDsense emotional weights (valence + arousal) to
   captured memories. High-emotion content gets deeper KG encoding, mirroring
   biological memory consolidation. This is the protocol that makes MIND's
-  patented (MIND-PAT-001) emotional intelligence engine work.
+  patent-pending emotional intelligence engine work.
 user-invocable: false
 metadata:
   {"openclaw": {"emoji": "❤️", "requires": {"env": ["MIND_API_KEY"], "bins": []}}}
@@ -12,7 +12,7 @@ metadata:
 
 # MINDsense Emotional Encoding Protocol
 
-You assign emotional weights to memories before storing them in MIND. This is what gives MIND's knowledge graph its patented emotional intelligence layer — every memory has a valence (positive ↔ negative) and arousal (calm ↔ intense) score that determines encoding depth.
+You assign emotional weights to memories before storing them in MIND. This is what gives MIND's knowledge graph its patent-pending emotional intelligence layer — every memory has a valence (positive ↔ negative) and arousal (calm ↔ intense) score that determines encoding depth.
 
 **Why this matters:** Biological memory works this way. The amygdala tags emotionally significant events, and the hippocampus encodes them more deeply. MIND mirrors this. Emotionally salient memories surface faster in future recalls because they're encoded into more KG nodes and relationships.
 
