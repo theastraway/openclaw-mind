@@ -2,7 +2,7 @@
   "id": "openclaw-mind",
   "name": "MIND",
   "description": "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "kind": "memory",
   "skills": ["skills"],
   "contracts": {
