@@ -2,12 +2,12 @@
  * @astramindapp/openclaw-mind
  *
  * MIND personal knowledge graph for OpenClaw.
- * 12 tools, 4 skills, full lifecycle hooks.
+ * 13 tools, 4 skills, full lifecycle hooks.
  *
  * Pattern modeled on @mem0/openclaw-mem0 (Apache-2.0). Differences:
  * - True knowledge graph backend (LightRAG) instead of vectors
  * - MINDsense emotional weighting on every captured fact (patent-pending)
- * - 12 tools vs Mem0's 8 (adds folders, query_graph, recall_emotional, context, life, crm_log)
+ * - 13 tools vs Mem0's 8 (adds folders, tasks, query_graph, recall_emotional, context, life, crm_log)
  * - 4 skills vs Mem0's 2 (adds emotional-encoding, graph-recall)
  * - Backed by the MIND personal AI platform with 50+ models, life mgmt, CRM, social
  */
@@ -58,16 +58,16 @@ export default definePluginEntry({
       logger: api.logger,
     });
 
-    // 4. Register all 12 tools
+    // 4. Register all 13 tools
     registerAllTools(api, client, cfg);
 
     // 5. Register CLI subcommands (init, status, import, search)
     registerCliCommands(api, client, cfg);
 
-    // 6. Register lifecycle hooks (auto-recall + auto-capture)
-    if (cfg.autoRecall || cfg.autoCapture) {
-      registerLifecycleHooks(api, client, cfg);
-    }
+    // 6. Register lifecycle hooks. Always registered — the once-per-session
+    //    MIND briefing must run regardless of the auto-recall/auto-capture
+    //    settings; recall and capture themselves stay gated by config.
+    registerLifecycleHooks(api, client, cfg);
 
     // 7. Register a service so other plugins can reach the MIND client
     api.registerService({

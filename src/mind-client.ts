@@ -175,6 +175,99 @@ export interface CrmActivityLogRequest {
   metadata?: Record<string, unknown>;
 }
 
+// ─── Tasks (the action-plan items inside a project) ───
+//
+// A MIND Life item is a *project*. A Task is a discrete unit of work — an
+// action-plan item — that hangs off it (parent_type="life_item"). Tasks can
+// also attach to a CRM contact, an agent, or stand alone.
+
+export type TaskStatus = "open" | "in_progress" | "blocked" | "done";
+export type TaskPriority = "none" | "low" | "medium" | "high" | "urgent";
+export type TaskParentType = "none" | "life_item" | "contact" | "agent";
+export type TaskAssigneeType = "unassigned" | "user" | "agent" | "external";
+
+export interface TaskCreateRequest {
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  due_date?: string;
+  estimated_minutes?: number;
+  tags?: string[];
+  parent_type?: TaskParentType;
+  parent_id?: string;
+  parent_label?: string;
+  assignee_type?: TaskAssigneeType;
+  assignee_id?: string;
+  assignee_label?: string;
+  dispatch_agent?: boolean;
+}
+
+export interface TaskUpdateRequest {
+  title?: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  due_date?: string;
+  estimated_minutes?: number;
+  tags?: string[];
+  parent_type?: TaskParentType;
+  parent_id?: string;
+  parent_label?: string;
+}
+
+export interface TaskAssignRequest {
+  assignee_type: TaskAssigneeType;
+  assignee_id?: string;
+  assignee_label?: string;
+  dispatch_agent?: boolean;
+}
+
+export interface Task {
+  task_id: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  due_date?: string;
+  tags?: string[];
+  estimated_minutes?: number;
+  actual_minutes?: number;
+  timer_running?: boolean;
+  parent_type?: string;
+  parent_id?: string;
+  parent_label?: string;
+  assignee_type?: string;
+  assignee_id?: string;
+  assignee_label?: string;
+  agent_run_status?: string;
+  agent_run_note?: string;
+  position?: number;
+  is_overdue?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TaskListResult {
+  tasks: Task[];
+  total: number;
+  page?: number;
+  page_size?: number;
+}
+
+export interface TaskReport {
+  total: number;
+  open: number;
+  in_progress: number;
+  blocked: number;
+  done: number;
+  overdue: number;
+  unassigned?: number;
+  completion_rate: number;
+  [key: string]: unknown;
+}
+
 // ─── Client ───
 
 export class MindClient {
@@ -308,23 +401,55 @@ export class MindClient {
 
   // ─── Life Management ───
 
-  async createLifeItem(req: LifeItemCreateRequest): Promise<LifeItem> {
-    return this.request<LifeItem>("POST", "/developer/v1/life/items", req);
+  /**
+   * Normalize a raw life-item record from the developer API. The API returns
+   * the identifier as `item_id`; the rest of the plugin expects `id`.
+   */
+  private normalizeLifeItem(raw: Record<string, unknown>): LifeItem {
+    return {
+      ...(raw as unknown as LifeItem),
+      id: (raw.item_id as string) ?? (raw.id as string),
+    };
   }
 
-  async listLifeItems(opts: { status?: string; limit?: number } = {}): Promise<{ items: LifeItem[] }> {
+  async createLifeItem(req: LifeItemCreateRequest): Promise<LifeItem> {
+    const raw = await this.request<Record<string, unknown>>(
+      "POST",
+      "/developer/v1/life/items",
+      req,
+    );
+    return this.normalizeLifeItem(raw);
+  }
+
+  async listLifeItems(
+    opts: { status?: string; limit?: number } = {},
+  ): Promise<{ items: LifeItem[]; total?: number }> {
     const params = new URLSearchParams();
     if (opts.status) params.set("status", opts.status);
     if (opts.limit !== undefined) params.set("limit", String(opts.limit));
     const qs = params.toString();
-    return this.request<{ items: LifeItem[] }>(
+    const raw = await this.request<{ items: Record<string, unknown>[]; total?: number }>(
       "GET",
       `/developer/v1/life/items${qs ? `?${qs}` : ""}`,
     );
+    return {
+      items: (raw.items ?? []).map((it) => this.normalizeLifeItem(it)),
+      total: raw.total,
+    };
   }
 
   async completeLifeItem(id: string): Promise<{ ok: boolean }> {
     return this.request<{ ok: boolean }>("POST", `/developer/v1/life/items/${id}/complete`, {});
+  }
+
+  async deleteLifeItem(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>("DELETE", `/developer/v1/life/items/${id}`);
+  }
+
+  async bulkDeleteLifeItems(
+    ids: string[],
+  ): Promise<{ status: string; deleted_count: number; deleted_ids: string[]; not_found: string[] }> {
+    return this.request("POST", "/developer/v1/life/items/bulk-delete", { item_ids: ids });
   }
 
   // ─── CRM ───
@@ -351,6 +476,71 @@ export class MindClient {
       "POST",
       `/developer/v1/crm/contacts/${contactId}/activities`,
       req,
+    );
+  }
+
+  // ─── Tasks ───
+
+  async createTask(req: TaskCreateRequest): Promise<Task> {
+    return this.request<Task>("POST", "/developer/v1/tasks", req);
+  }
+
+  async listTasks(
+    params: Record<string, string | number | boolean> = {},
+  ): Promise<TaskListResult> {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+    }
+    const s = qs.toString();
+    return this.request<TaskListResult>("GET", `/developer/v1/tasks${s ? `?${s}` : ""}`);
+  }
+
+  async getTask(taskId: string): Promise<Task> {
+    return this.request<Task>("GET", `/developer/v1/tasks/${encodeURIComponent(taskId)}`);
+  }
+
+  async updateTask(taskId: string, patch: TaskUpdateRequest): Promise<Task> {
+    return this.request<Task>(
+      "PATCH",
+      `/developer/v1/tasks/${encodeURIComponent(taskId)}`,
+      patch,
+    );
+  }
+
+  async completeTask(taskId: string, done = true, note?: string): Promise<Task> {
+    return this.request<Task>(
+      "POST",
+      `/developer/v1/tasks/${encodeURIComponent(taskId)}/complete`,
+      { done, note },
+    );
+  }
+
+  async assignTask(taskId: string, req: TaskAssignRequest): Promise<Task> {
+    return this.request<Task>(
+      "POST",
+      `/developer/v1/tasks/${encodeURIComponent(taskId)}/assign`,
+      req,
+    );
+  }
+
+  async deleteTask(taskId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(
+      "DELETE",
+      `/developer/v1/tasks/${encodeURIComponent(taskId)}`,
+    );
+  }
+
+  async getTaskReport(
+    opts: { parent_type?: string; parent_id?: string } = {},
+  ): Promise<TaskReport> {
+    const qs = new URLSearchParams();
+    if (opts.parent_type) qs.set("parent_type", opts.parent_type);
+    if (opts.parent_id) qs.set("parent_id", opts.parent_id);
+    const s = qs.toString();
+    return this.request<TaskReport>(
+      "GET",
+      `/developer/v1/tasks/reports${s ? `?${s}` : ""}`,
     );
   }
 

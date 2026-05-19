@@ -1,7 +1,7 @@
 {
   "name": "@astramindapp/openclaw-mind",
   "version": "0.3.0",
-  "description": "MIND personal knowledge graph for OpenClaw — true KG, document folders, 50+ models, MINDsense emotional intelligence, life management, CRM. The most complete memory plugin for AI agents.",
+  "description": "MIND personal knowledge graph for OpenClaw — true KG, document folders, 50+ models, MINDsense emotional intelligence, life management, projects & tasks, CRM. The most complete memory plugin for AI agents.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
