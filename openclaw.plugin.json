@@ -1,10 +1,12 @@
 {
   "id": "openclaw-mind",
   "name": "MIND",
-  "description": "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
+  "description": "MIND personal knowledge graph for OpenClaw — true KG, document folders, 50+ AI models, MINDsense emotional intelligence, life management, projects & tasks, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
   "version": "0.3.0",
   "kind": "memory",
-  "skills": ["skills"],
+  "skills": [
+    "skills"
+  ],
   "contracts": {
     "tools": [
       "mind_search",
@@ -18,11 +20,14 @@
       "mind_recall_emotional",
       "mind_context",
       "mind_life",
+      "mind_tasks",
       "mind_crm_log"
     ]
   },
   "providerAuthEnvVars": {
-    "mind": ["MIND_API_KEY"]
+    "mind": [
+      "MIND_API_KEY"
+    ]
   },
   "providerAuthChoices": [
     {
@@ -84,7 +89,7 @@
     },
     "enableLifeIntegration": {
       "label": "Life Management Integration",
-      "help": "Allow the agent to create MIND Life items (tasks, goals, calendar events) from conversations."
+      "help": "Allow the agent to manage MIND Life — goals and projects (mind_life) plus the action-plan items / tasks inside them (mind_tasks)."
     },
     "enableCrmLogging": {
       "label": "CRM Activity Logging",
@@ -123,7 +128,13 @@
       },
       "queryMode": {
         "type": "string",
-        "enum": ["hybrid", "mix", "global", "local", "naive"]
+        "enum": [
+          "hybrid",
+          "mix",
+          "global",
+          "local",
+          "naive"
+        ]
       },
       "enableMindsense": {
         "type": "boolean"
@@ -140,35 +151,71 @@
           "triage": {
             "type": "object",
             "properties": {
-              "enabled": { "type": "boolean" },
-              "importanceThreshold": { "type": "number" },
-              "credentialPatterns": { "type": "array", "items": { "type": "string" } }
+              "enabled": {
+                "type": "boolean"
+              },
+              "importanceThreshold": {
+                "type": "number"
+              },
+              "credentialPatterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           },
           "recall": {
             "type": "object",
             "properties": {
-              "enabled": { "type": "boolean" },
-              "strategy": { "type": "string", "enum": ["always", "smart", "manual"] },
-              "tokenBudget": { "type": "number" },
-              "maxMemories": { "type": "number" }
+              "enabled": {
+                "type": "boolean"
+              },
+              "strategy": {
+                "type": "string",
+                "enum": [
+                  "always",
+                  "smart",
+                  "manual"
+                ]
+              },
+              "tokenBudget": {
+                "type": "number"
+              },
+              "maxMemories": {
+                "type": "number"
+              }
             }
           },
           "dream": {
             "type": "object",
             "properties": {
-              "enabled": { "type": "boolean" },
-              "auto": { "type": "boolean" },
-              "minHours": { "type": "number" },
-              "minSessions": { "type": "number" }
+              "enabled": {
+                "type": "boolean"
+              },
+              "auto": {
+                "type": "boolean"
+              },
+              "minHours": {
+                "type": "number"
+              },
+              "minSessions": {
+                "type": "number"
+              }
             }
           },
           "emotionalEncoding": {
             "type": "object",
             "properties": {
-              "enabled": { "type": "boolean" },
-              "minValence": { "type": "number" },
-              "minArousal": { "type": "number" }
+              "enabled": {
+                "type": "boolean"
+              },
+              "minValence": {
+                "type": "number"
+              },
+              "minArousal": {
+                "type": "number"
+              }
             }
           }
         }

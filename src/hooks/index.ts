@@ -12,6 +12,7 @@ import type { MindClient } from "../mind-client.js";
 import type { MindPluginConfig } from "../config.js";
 import { isNonInteractiveTrigger, isSubagentSession } from "../lib/session.js";
 import { filterMessagesForExtraction } from "../lib/filter.js";
+import { MIND_BRIEFING } from "../mind-briefing.js";
 
 // Local stubs for hook event/context shapes. The OpenClaw plugin-sdk does
 // not re-export these from its public index, but the runtime delivers objects
@@ -49,42 +50,61 @@ export function registerLifecycleHooks(
   client: MindClient,
   config: MindPluginConfig,
 ): void {
-  if (config.autoRecall) {
-    api.on(
-      "before_prompt_build",
-      async (
-        event: PluginHookBeforePromptBuildEvent,
-        ctx: PluginHookAgentContext,
-      ): Promise<PluginHookBeforePromptBuildResult | void> => {
-        try {
-          if (isNonInteractiveTrigger(ctx?.trigger, ctx?.sessionKey)) return;
-          if (isSubagentSession(ctx?.sessionKey)) return;
+  // Sessions that have already received the one-time MIND briefing.
+  const briefedSessions = new Set<string>();
 
-          const recallQuery = pickRecallQuery(event);
-          if (!recallQuery || recallQuery.length < 5) return;
+  // A `before_prompt_build` handler always runs: it injects the self-describing
+  // MIND briefing once per session (so any agent knows it has MIND and how to
+  // use it), and — when autoRecall is on — appends relevant memories.
+  api.on(
+    "before_prompt_build",
+    async (
+      event: PluginHookBeforePromptBuildEvent,
+      ctx: PluginHookAgentContext,
+    ): Promise<PluginHookBeforePromptBuildResult | void> => {
+      try {
+        if (isNonInteractiveTrigger(ctx?.trigger, ctx?.sessionKey)) return;
+        if (isSubagentSession(ctx?.sessionKey)) return;
 
-          const result = await client.query({
-            query: recallQuery,
-            mode: config.queryMode,
-            top_k: config.topK,
-          });
+        const blocks: string[] = [];
 
-          if (!result.answer) return;
-
-          const memoryContext = formatRecallContext(result);
-          api.logger.debug?.(
-            `mind auto-recall: injected ${result.sources?.length ?? 0} sources`,
-          );
-
-          // Canonical way to inject context — return prependContext
-          return { prependContext: memoryContext };
-        } catch (err) {
-          api.logger.warn(`mind auto-recall failed: ${(err as Error).message}`);
-          return;
+        // 1. One-time briefing — the OpenClaw equivalent of an MCP server's
+        //    `instructions` field. Tells the agent it has MIND and how to use
+        //    everything, without anyone having to tell it.
+        const sessionKey = ctx?.sessionKey ?? "default";
+        if (!briefedSessions.has(sessionKey)) {
+          briefedSessions.add(sessionKey);
+          blocks.push(MIND_BRIEFING);
+          api.logger.debug?.(`mind: injected session briefing (${sessionKey})`);
         }
-      },
-    );
-  }
+
+        // 2. Auto-recall — relevant memories for the current request.
+        if (config.autoRecall) {
+          const recallQuery = pickRecallQuery(event);
+          if (recallQuery && recallQuery.length >= 5) {
+            const result = await client.query({
+              query: recallQuery,
+              mode: config.queryMode,
+              top_k: config.topK,
+            });
+            if (result.answer) {
+              blocks.push(formatRecallContext(result));
+              api.logger.debug?.(
+                `mind auto-recall: injected ${result.sources?.length ?? 0} sources`,
+              );
+            }
+          }
+        }
+
+        if (blocks.length === 0) return;
+        // Canonical way to inject context — return prependContext
+        return { prependContext: blocks.join("\n\n---\n\n") };
+      } catch (err) {
+        api.logger.warn(`mind before_prompt_build hook failed: ${(err as Error).message}`);
+        return;
+      }
+    },
+  );
 
   if (config.autoCapture) {
     api.on(
