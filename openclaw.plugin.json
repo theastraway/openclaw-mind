@@ -1,8 +1,8 @@
 {
   "id": "openclaw-mind",
   "name": "MIND",
-  "description": "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
-  "version": "0.1.0",
+  "description": "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, projects & tasks, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
+  "version": "0.2.0",
   "kind": "memory",
   "skills": ["skills"],
   "contracts": {
@@ -17,6 +17,7 @@
       "mind_recall_emotional",
       "mind_context",
       "mind_life",
+      "mind_tasks",
       "mind_crm_log"
     ]
   },
@@ -83,7 +84,7 @@
     },
     "enableLifeIntegration": {
       "label": "Life Management Integration",
-      "help": "Allow the agent to create MIND Life items (tasks, goals, calendar events) from conversations."
+      "help": "Allow the agent to manage MIND Life — goals and projects (mind_life) plus the action-plan items / tasks inside them (mind_tasks)."
     },
     "enableCrmLogging": {
       "label": "CRM Activity Logging",

@@ -20,6 +20,7 @@ import { createMindQueryGraphTool } from "./query-graph.js";
 import { createMindRecallEmotionalTool } from "./recall-emotional.js";
 import { createMindContextTool } from "./context.js";
 import { createMindLifeTool } from "./life.js";
+import { createMindTasksTool } from "./tasks.js";
 import { createMindCrmLogTool } from "./crm-log.js";
 
 export interface ToolDeps {
@@ -50,6 +51,7 @@ export function registerAllTools(
   api.registerTool(createMindContextTool(deps));
   if (config.enableLifeIntegration) {
     api.registerTool(createMindLifeTool(deps));
+    api.registerTool(createMindTasksTool(deps));
   }
   if (config.enableCrmLogging) {
     api.registerTool(createMindCrmLogTool(deps));

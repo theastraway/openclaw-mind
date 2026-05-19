@@ -22,8 +22,8 @@ openclaw plugins install @astramindapp/openclaw-mind
 
 | Feature | MIND | Mem0 | Anthropic Memory MCP |
 |---------|------|------|----------------------|
-| Tools | **11** | 8 | 8 |
-| Knowledge graph | ✅ true KG (LightRAG) | ❌ vectors only | ❌ JSON |
+| Tools | **12** | 8 | 8 |
+| Knowledge graph | ✅ true KG | ❌ vectors only | ❌ JSON |
 | 50+ AI models | ✅ | ❌ provider-agnostic but no UI | ❌ Claude only |
 | Emotional intelligence | ✅ MINDsense (patented) | ❌ | ❌ |
 | Auto-recall before turn | ✅ | ✅ | ❌ |
@@ -87,7 +87,8 @@ This reads `~/.openclaw/workspace/` and ingests `SOUL.md`, `IDENTITY.md`, `USER.
 | `mind_query_graph` | Graph traversal queries — find connected entities |
 | `mind_recall_emotional` | MINDsense-weighted recall — emotionally salient memories first |
 | `mind_context` | Load persistent identity (soul, user, rules, priorities, recent) |
-| `mind_life` | Create/list/complete tasks, goals, calendar events |
+| `mind_life` | Manage the LIFE board — goals and projects (the top-level items) |
+| `mind_tasks` | Manage action-plan items inside a project — create/list/update/complete/assign tasks |
 | `mind_crm_log` | Log contacts and interaction history |
 
 ## Skills (Agentic Memory Protocols)

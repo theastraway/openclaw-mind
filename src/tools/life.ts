@@ -69,7 +69,7 @@ export function createMindLifeTool(deps: ToolDeps) {
     name: "mind_life",
     label: "MIND Life",
     description:
-      "Manage MIND Life items (tasks, goals, projects). Use when the user mentions something to do, a deadline, a goal, or a project. Actions: 'create', 'list', 'complete', 'delete' (one item by item_id), 'bulk_delete' (many at once via item_ids), 'clear' (delete EVERY item on the board — use when the user says clear/empty/delete all). MIND Life syncs to web and mobile apps.",
+      "Manage MIND Life items — the top-level board entries: goals and projects. Use when the user mentions a goal, a project, or something to track. Actions: 'create', 'list', 'complete', 'delete' (one item by item_id), 'bulk_delete' (many at once via item_ids), 'clear' (delete EVERY item on the board — use when the user says clear/empty/delete all). To add action-plan items (tasks) INSIDE a project, use the `mind_tasks` tool with parent_id set to the Life item's id. MIND Life syncs to web and mobile apps.",
     parameters: LifeParameters,
     async execute(_toolCallId: string, params: LifeParams) {
       try {

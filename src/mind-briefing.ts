@@ -29,7 +29,8 @@ through the \`mind_*\` tools listed below.
 - \`mind_query_graph\` — traverse entity relationships in the graph.
 - \`mind_recall_emotional\` — recall by emotional weight (MINDsense).
 - \`mind_add\` / \`mind_get\` / \`mind_list\` / \`mind_update\` / \`mind_delete\` — manage memories (documents, entries, thoughts).
-- \`mind_life\` — goals, tasks, projects, calendar. Actions: create, list, complete, **delete**, **bulk_delete**, **clear** (empty the whole board). Use \`clear\` when asked to delete all life items.
+- \`mind_life\` — the LIFE board: goals and **projects** (the top-level items). Actions: create, list, complete, **delete**, **bulk_delete**, **clear** (empty the whole board). Use \`clear\` when asked to delete all life items.
+- \`mind_tasks\` — the **action-plan items inside a project**. A LIFE item is a project; a task is a unit of work on it. To add an action-plan item to a project, \`mind_tasks\` action='create' with \`parent_id\` set to the LIFE item's id. Also handles list/get/update/complete/reopen/assign/delete/reports. Tasks are assignable and reportable.
 - \`mind_crm_log\` — log contacts and interaction history.
 
 For the complete playbook — every action, parameters, REST equivalents, and
