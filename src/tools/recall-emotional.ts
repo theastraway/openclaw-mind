@@ -1,5 +1,5 @@
 /**
- * mind_recall_emotional — UNIQUE TO MIND (PATENTED via MIND-PAT-001)
+ * mind_recall_emotional — UNIQUE TO MIND (patent-pending)
  *
  * Emotionally weighted memory recall using MINDsense valence + arousal scores.
  * No other memory tool does this.
@@ -48,7 +48,7 @@ export function createMindRecallEmotionalTool(deps: ToolDeps) {
     name: "mind_recall_emotional",
     label: "MIND Emotional Recall",
     description:
-      "Recall memories weighted by emotional significance (MINDsense, patented). Use when the agent needs to understand the user's strong feelings, important moments, frustrations, wins, or warnings. Example queries: 'what frustrates the user about deployment', 'what wins did the user celebrate this month'.",
+      "Recall memories weighted by emotional significance (MINDsense, patent-pending). Use when the agent needs to understand the user's strong feelings, important moments, frustrations, wins, or warnings. Example queries: 'what frustrates the user about deployment', 'what wins did the user celebrate this month'.",
     parameters: RecallEmotionalParameters,
     async execute(_toolCallId: string, params: RecallEmotionalParams) {
       try {

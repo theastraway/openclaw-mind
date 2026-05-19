@@ -16,6 +16,7 @@ import { createMindGetTool } from "./get.js";
 import { createMindListTool } from "./list.js";
 import { createMindUpdateTool } from "./update.js";
 import { createMindDeleteTool } from "./delete.js";
+import { createMindFoldersTool } from "./folders.js";
 import { createMindQueryGraphTool } from "./query-graph.js";
 import { createMindRecallEmotionalTool } from "./recall-emotional.js";
 import { createMindContextTool } from "./context.js";
@@ -41,6 +42,9 @@ export function registerAllTools(
   api.registerTool(createMindListTool(deps));
   api.registerTool(createMindUpdateTool(deps));
   api.registerTool(createMindDeleteTool(deps));
+
+  // Document organization
+  api.registerTool(createMindFoldersTool(deps));
 
   // MIND-unique capabilities
   api.registerTool(createMindQueryGraphTool(deps));
