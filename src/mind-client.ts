@@ -555,7 +555,7 @@ export class MindClient {
     const headers: Record<string, string> = {
       "X-API-Key": this.apiKey,
       Accept: "application/json",
-      "User-Agent": "openclaw-mind/0.3.0",
+      "User-Agent": "openclaw-mind/0.3.1",
     };
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";
