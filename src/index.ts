@@ -64,10 +64,10 @@ export default definePluginEntry({
     // 5. Register CLI subcommands (init, status, import, search)
     registerCliCommands(api, client, cfg);
 
-    // 6. Register lifecycle hooks (auto-recall + auto-capture)
-    if (cfg.autoRecall || cfg.autoCapture) {
-      registerLifecycleHooks(api, client, cfg);
-    }
+    // 6. Register lifecycle hooks. Always registered — the once-per-session
+    //    MIND briefing must run regardless of the auto-recall/auto-capture
+    //    settings; recall and capture themselves stay gated by config.
+    registerLifecycleHooks(api, client, cfg);
 
     // 7. Register a service so other plugins can reach the MIND client
     api.registerService({
