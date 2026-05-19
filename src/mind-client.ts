@@ -252,23 +252,55 @@ export class MindClient {
 
   // ─── Life Management ───
 
-  async createLifeItem(req: LifeItemCreateRequest): Promise<LifeItem> {
-    return this.request<LifeItem>("POST", "/developer/v1/life/items", req);
+  /**
+   * Normalize a raw life-item record from the developer API. The API returns
+   * the identifier as `item_id`; the rest of the plugin expects `id`.
+   */
+  private normalizeLifeItem(raw: Record<string, unknown>): LifeItem {
+    return {
+      ...(raw as unknown as LifeItem),
+      id: (raw.item_id as string) ?? (raw.id as string),
+    };
   }
 
-  async listLifeItems(opts: { status?: string; limit?: number } = {}): Promise<{ items: LifeItem[] }> {
+  async createLifeItem(req: LifeItemCreateRequest): Promise<LifeItem> {
+    const raw = await this.request<Record<string, unknown>>(
+      "POST",
+      "/developer/v1/life/items",
+      req,
+    );
+    return this.normalizeLifeItem(raw);
+  }
+
+  async listLifeItems(
+    opts: { status?: string; limit?: number } = {},
+  ): Promise<{ items: LifeItem[]; total?: number }> {
     const params = new URLSearchParams();
     if (opts.status) params.set("status", opts.status);
     if (opts.limit !== undefined) params.set("limit", String(opts.limit));
     const qs = params.toString();
-    return this.request<{ items: LifeItem[] }>(
+    const raw = await this.request<{ items: Record<string, unknown>[]; total?: number }>(
       "GET",
       `/developer/v1/life/items${qs ? `?${qs}` : ""}`,
     );
+    return {
+      items: (raw.items ?? []).map((it) => this.normalizeLifeItem(it)),
+      total: raw.total,
+    };
   }
 
   async completeLifeItem(id: string): Promise<{ ok: boolean }> {
     return this.request<{ ok: boolean }>("POST", `/developer/v1/life/items/${id}/complete`, {});
+  }
+
+  async deleteLifeItem(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>("DELETE", `/developer/v1/life/items/${id}`);
+  }
+
+  async bulkDeleteLifeItems(
+    ids: string[],
+  ): Promise<{ status: string; deleted_count: number; deleted_ids: string[]; not_found: string[] }> {
+    return this.request("POST", "/developer/v1/life/items/bulk-delete", { item_ids: ids });
   }
 
   // ─── CRM ───
