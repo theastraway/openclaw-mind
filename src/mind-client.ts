@@ -86,6 +86,21 @@ export interface DocumentListResponse {
   page_size?: number;
 }
 
+export interface MindFolder {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  created_at?: string;
+  updated_at?: string;
+  document_count?: number;
+}
+
+export interface FolderListResponse {
+  folders: MindFolder[];
+  unfiled_count: number;
+  total_count: number;
+}
+
 export interface EntryCreateRequest {
   title?: string;
   content: string;
@@ -211,6 +226,47 @@ export class MindClient {
     return this.request<{ ok: boolean }>("DELETE", `/developer/v1/documents/${id}`);
   }
 
+  // ─── Folders ───
+  // Folders organize the document tray. Presentation only — the knowledge
+  // graph still indexes every document regardless of folder.
+
+  async listFolders(): Promise<FolderListResponse> {
+    return this.request<FolderListResponse>("GET", "/developer/v1/folders");
+  }
+
+  async createFolder(name: string, parentId?: string | null): Promise<{ folder: MindFolder }> {
+    return this.request<{ folder: MindFolder }>("POST", "/developer/v1/folders", {
+      name,
+      parent_id: parentId ?? null,
+    });
+  }
+
+  /** Rename and/or move a folder. Only the keys in `body` change — pass
+   *  `parent_id` (id or null) to move; omit it to leave the folder in place. */
+  async updateFolder(
+    folderId: string,
+    body: { name?: string; parent_id?: string | null },
+  ): Promise<{ folder: MindFolder }> {
+    return this.request<{ folder: MindFolder }>("PATCH", `/developer/v1/folders/${folderId}`, body);
+  }
+
+  async deleteFolder(
+    folderId: string,
+  ): Promise<{ status: string; reparented_to: string | null; documents_reparented: number }> {
+    return this.request("DELETE", `/developer/v1/folders/${folderId}`);
+  }
+
+  /** Move documents into a folder, or to the top level (`folderId` = null). */
+  async moveDocuments(
+    docIds: string[],
+    folderId: string | null,
+  ): Promise<{ status: string; moved: number; folder_id: string | null }> {
+    return this.request("POST", "/developer/v1/documents/move", {
+      doc_ids: docIds,
+      folder_id: folderId,
+    });
+  }
+
   // ─── Entries (lighter-weight than documents) ───
 
   async createEntry(req: EntryCreateRequest): Promise<MindEntry> {
@@ -309,7 +365,7 @@ export class MindClient {
     const headers: Record<string, string> = {
       "X-API-Key": this.apiKey,
       Accept: "application/json",
-      "User-Agent": "openclaw-mind/0.1.0",
+      "User-Agent": "openclaw-mind/0.2.0",
     };
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";
