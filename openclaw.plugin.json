@@ -1,27 +1,38 @@
 {
   "id": "openclaw-mind",
   "name": "MIND",
-  "description": "MIND personal knowledge graph for OpenClaw — true KG, document folders, 50+ AI models, MINDsense emotional intelligence, life management, projects & tasks, CRM. Auto-recall injects relevant memories into context. Auto-capture extracts entities + relationships + emotional weights from each turn.",
-  "version": "0.3.1",
+  "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions). Full canonical parity with @astramindapp/mcp-server: memory (query / remember / context / folders / save_typed / templates), work (life / tasks / crm), graph + emotional intelligence (graph / sense), self (profile / insights / research / train), social, ops (notify / automate / accounts), admin (admin now includes the Featured Minds Portal CRUD: get_featured_mind_full, update_featured_mind_owner_profile, reorder_featured_minds, delete_featured_mind; agents; tickets). Auto-recall and auto-capture run on every turn.",
+  "version": "0.5.0",
   "kind": "memory",
   "skills": [
     "skills"
   ],
   "contracts": {
     "tools": [
-      "mind_search",
-      "mind_add",
-      "mind_get",
-      "mind_list",
-      "mind_update",
-      "mind_delete",
-      "mind_folders",
-      "mind_query_graph",
-      "mind_recall_emotional",
+      "mind_query",
+      "mind_remember",
       "mind_context",
+      "mind_folders",
       "mind_life",
       "mind_tasks",
-      "mind_crm_log"
+      "mind_crm",
+      "mind_graph",
+      "mind_sense",
+      "mind_profile",
+      "mind_insights",
+      "mind_research",
+      "mind_train",
+      "mind_save_typed",
+      "mind_list_templates",
+      "mind_get_template",
+      "mind_bootstrap_templates",
+      "mind_social",
+      "mind_notify",
+      "mind_automate",
+      "mind_accounts",
+      "mind_admin",
+      "mind_agents",
+      "mind_tickets"
     ]
   },
   "setup": {

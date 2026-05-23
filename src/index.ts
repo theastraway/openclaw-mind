@@ -2,14 +2,31 @@
  * @astramindapp/openclaw-mind
  *
  * MIND personal knowledge graph for OpenClaw.
- * 13 tools, 4 skills, full lifecycle hooks.
+ * 24 tools (143 actions), full canonical parity with @astramindapp/mcp-server.
  *
- * Pattern modeled on @mem0/openclaw-mem0 (Apache-2.0). Differences:
- * - True knowledge graph backend (LightRAG) instead of vectors
- * - MINDsense emotional weighting on every captured fact (patent-pending)
- * - 13 tools vs Mem0's 8 (adds folders, tasks, query_graph, recall_emotional, context, life, crm_log)
- * - 4 skills vs Mem0's 2 (adds emotional-encoding, graph-recall)
- * - Backed by the MIND personal AI platform with 50+ models, life mgmt, CRM, social
+ * Tool surface (full):
+ *   Memory + search:  mind_query, mind_remember, mind_context
+ *   Organization:     mind_folders
+ *   Work:             mind_life, mind_tasks, mind_crm
+ *   Graph + sense:    mind_graph, mind_sense
+ *   Self:             mind_profile, mind_insights, mind_research, mind_train
+ *   Front Layer:      mind_save_typed, mind_list_templates, mind_get_template,
+ *                     mind_bootstrap_templates
+ *   Social:           mind_social
+ *   Ops:              mind_notify, mind_automate
+ *   Accounts:         mind_accounts
+ *   Admin-only:       mind_admin, mind_agents, mind_tickets
+ *
+ * Plus lifecycle hooks an MCP server can't offer:
+ *   - autoRecall: pulls relevant memories into context before each user turn
+ *   - autoCapture: extracts entities/relationships/emotional weights on
+ *     agent_end via the conversation-access hook
+ *
+ * Why a plugin and not an MCP server for OpenClaw:
+ *   The MCP server (@astramindapp/mcp-server) targets generic MCP hosts
+ *   (Claude Code, Cursor, Windsurf, n8n). OpenClaw uses this plugin because
+ *   it gets first-class lifecycle hooks. Same MIND backend, same tool names,
+ *   wider integration.
  */
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
@@ -31,7 +48,7 @@ export default definePluginEntry({
   id: "openclaw-mind",
   name: "MIND",
   description:
-    "MIND personal knowledge graph for OpenClaw — true KG, 50+ AI models, MINDsense emotional intelligence, life management, CRM. The most complete memory plugin for AI agents.",
+    "MIND personal knowledge graph for OpenClaw — 24 tools (memory, life, CRM, graph, MINDsense emotional intelligence, agents, tickets, social, automations, multi-MIND accounts). Auto-recall + auto-capture on every turn. Full parity with @astramindapp/mcp-server.",
   kind: "memory",
 
   register(api) {
@@ -58,7 +75,7 @@ export default definePluginEntry({
       logger: api.logger,
     });
 
-    // 4. Register all 13 tools
+    // 4. Register all 24 canonical tools
     registerAllTools(api, client, cfg);
 
     // 5. Register CLI subcommands (init, status, import, search)
@@ -74,7 +91,7 @@ export default definePluginEntry({
       id: "openclaw-mind",
       start: () => {
         api.logger.info(
-          `openclaw-mind v0.1.0 ready — autoRecall=${cfg.autoRecall} autoCapture=${cfg.autoCapture} baseUrl=${cfg.baseUrl}`,
+          `openclaw-mind v0.4.0 ready — 24 tools, autoRecall=${cfg.autoRecall} autoCapture=${cfg.autoCapture} baseUrl=${cfg.baseUrl}`,
         );
       },
     });
