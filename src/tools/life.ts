@@ -1,7 +1,9 @@
 /**
- * mind_life — UNIQUE TO MIND
+ * mind_life — Goals, projects, tasks, and calendar events.
  *
- * Life management: tasks, goals, projects, calendar events.
+ * Full canonical action surface (matches MCP server v0.12.x). Includes
+ * calendar management + stats + move/update/get. Keeps the plugin-native
+ * "clear" extension that wipes the board.
  */
 
 import { Type, type Static } from "@sinclair/typebox";
@@ -10,54 +12,71 @@ import type { ToolDeps } from "./index.js";
 const LifeParameters = Type.Object({
   action: Type.Union(
     [
-      Type.Literal("create"),
       Type.Literal("list"),
+      Type.Literal("create"),
+      Type.Literal("update"),
       Type.Literal("complete"),
       Type.Literal("delete"),
       Type.Literal("bulk_delete"),
+      Type.Literal("move"),
+      Type.Literal("get"),
+      Type.Literal("calendar_list"),
+      Type.Literal("calendar_create"),
+      Type.Literal("calendar_update"),
+      Type.Literal("calendar_delete"),
+      Type.Literal("stats"),
       Type.Literal("clear"),
     ],
-    { description: "What to do" },
+    { description: "What to do." },
   ),
-  title: Type.Optional(Type.String({ description: "Item title (required for create)" })),
+  title: Type.Optional(Type.String({ description: "Title — required for create / calendar_create." })),
   description: Type.Optional(Type.String()),
   type: Type.Optional(
     Type.Union(
       [Type.Literal("task"), Type.Literal("goal"), Type.Literal("project")],
-      { description: "Item type. Default: 'task'" },
+      { description: "Life item type. Default: 'task'." },
     ),
   ),
   priority: Type.Optional(
     Type.Union(
-      [
-        Type.Literal("low"),
-        Type.Literal("medium"),
-        Type.Literal("high"),
-        Type.Literal("urgent"),
-      ],
-      { description: "Priority. Default: 'medium'" },
+      [Type.Literal("low"), Type.Literal("medium"), Type.Literal("high"), Type.Literal("urgent")],
+      { description: "Priority. Default: 'medium'." },
     ),
   ),
-  due_date: Type.Optional(Type.String({ description: "ISO date or datetime" })),
+  due_date: Type.Optional(Type.String({ description: "Due date YYYY-MM-DD." })),
   status: Type.Optional(
-    Type.Union(
-      [
-        Type.Literal("todo"),
-        Type.Literal("in_progress"),
-        Type.Literal("blocked"),
-        Type.Literal("done"),
-        Type.Literal("all"),
-      ],
-      { description: "Filter for list. Default: 'todo'" },
-    ),
-  ),
-  limit: Type.Optional(Type.Number({ description: "Max results for list. Default: 20" })),
-  item_id: Type.Optional(Type.String({ description: "Item ID for complete or delete" })),
-  item_ids: Type.Optional(
-    Type.Array(Type.String(), {
-      description: "Item IDs to remove in one call for bulk_delete (up to 200)",
+    Type.String({
+      description:
+        "Filter for list, or new status for update/move (todo, in_progress, blocked, done, action, someday, waiting, completed, all).",
     }),
   ),
+  color: Type.Optional(
+    Type.Union(
+      [
+        Type.Literal("default"),
+        Type.Literal("red"),
+        Type.Literal("orange"),
+        Type.Literal("yellow"),
+        Type.Literal("green"),
+        Type.Literal("blue"),
+        Type.Literal("purple"),
+        Type.Literal("pink"),
+      ],
+      { description: "Card stripe color." },
+    ),
+  ),
+  target_date: Type.Optional(Type.String({ description: "Target completion date YYYY-MM-DD." })),
+  tags: Type.Optional(Type.Array(Type.String(), { description: "Tags (REPLACES existing on update)." })),
+  limit: Type.Optional(Type.Number({ description: "Max results for list. Default: 30." })),
+  item_id: Type.Optional(Type.String({ description: "Item ID for get/update/complete/delete/move." })),
+  item_ids: Type.Optional(
+    Type.Array(Type.String(), { description: "Item IDs for bulk_delete (1–200 in one call)." }),
+  ),
+  // calendar
+  event_id: Type.Optional(Type.String({ description: "Event ID for calendar_update / calendar_delete." })),
+  start_time: Type.Optional(Type.String({ description: "Calendar start time (ISO 8601)." })),
+  end_time: Type.Optional(Type.String({ description: "Calendar end time (ISO 8601)." })),
+  all_day: Type.Optional(Type.Boolean({ description: "Whether the calendar event is all-day." })),
 });
 
 type LifeParams = Static<typeof LifeParameters>;
@@ -69,18 +88,13 @@ export function createMindLifeTool(deps: ToolDeps) {
     name: "mind_life",
     label: "MIND Life",
     description:
-      "Manage MIND Life items — the top-level board entries: goals and projects. Use when the user mentions a goal, a project, or something to track. Actions: 'create', 'list', 'complete', 'delete' (one item by item_id), 'bulk_delete' (many at once via item_ids), 'clear' (delete EVERY item on the board — use when the user says clear/empty/delete all). To add action-plan items (tasks) INSIDE a project, use the `mind_tasks` tool with parent_id set to the Life item's id. MIND Life syncs to web and mobile apps.",
+      "Manage goals, projects, tasks, and calendar events in MIND Life. Use for tracking work, creating action items, updating progress, completing tasks, managing calendar, and viewing stats. To add action-plan items INSIDE a project, use mind_tasks with parent_id set to the Life item's id. Syncs to web and mobile.",
     parameters: LifeParameters,
     async execute(_toolCallId: string, params: LifeParams) {
       try {
         switch (params.action) {
           case "create": {
-            if (!params.title) {
-              return {
-                content: [{ type: "text" as const, text: "'title' is required for action='create'" }],
-                details: { error: "missing_title" },
-              };
-            }
+            if (!params.title) return missing("title");
             const item = await deps.client.createLifeItem({
               title: params.title,
               description: params.description,
@@ -88,6 +102,9 @@ export function createMindLifeTool(deps: ToolDeps) {
               status: "todo",
               priority: params.priority ?? "medium",
               due_date: params.due_date,
+              tags: params.tags,
+              color: params.color,
+              target_date: params.target_date,
             });
             return {
               content: [{ type: "text" as const, text: `Created life item "${item.title}" (id: ${item.id})` }],
@@ -95,13 +112,10 @@ export function createMindLifeTool(deps: ToolDeps) {
             };
           }
           case "list": {
-            // Default to no status filter — the MIND life board uses stage
-            // names (thoughts/ready/action/active), so a "todo" filter would
-            // hide everything.
             const status = params.status ?? "all";
             const items = await deps.client.listLifeItems({
               status: status === "all" ? undefined : status,
-              limit: params.limit ?? 20,
+              limit: params.limit ?? 30,
             });
             const list = items.items
               .map((i) => `- [${i.status}] ${i.title} (id: ${i.id})${i.due_date ? ` (due ${i.due_date})` : ""}`)
@@ -111,13 +125,47 @@ export function createMindLifeTool(deps: ToolDeps) {
               details: items,
             };
           }
+          case "get": {
+            if (!params.item_id) return missing("item_id");
+            const item = await deps.client.getLifeItem(params.item_id);
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `${item.title}${item.description ? `\n\n${item.description}` : ""}\nStatus: ${item.status ?? "?"}${item.due_date ? `\nDue: ${item.due_date}` : ""}`,
+                },
+              ],
+              details: item,
+            };
+          }
+          case "update": {
+            if (!params.item_id) return missing("item_id");
+            const patch: Record<string, unknown> = {};
+            if (params.title !== undefined) patch.title = params.title;
+            if (params.description !== undefined) patch.description = params.description;
+            if (params.type !== undefined) patch.type = params.type;
+            if (params.priority !== undefined) patch.priority = params.priority;
+            if (params.due_date !== undefined) patch.due_date = params.due_date;
+            if (params.status !== undefined) patch.status = params.status;
+            if (params.color !== undefined) patch.color = params.color;
+            if (params.target_date !== undefined) patch.target_date = params.target_date;
+            if (params.tags !== undefined) patch.tags = params.tags;
+            const item = await deps.client.updateLifeItem(params.item_id, patch);
+            return {
+              content: [{ type: "text" as const, text: `Updated life item "${item.title}"` }],
+              details: item,
+            };
+          }
+          case "move": {
+            if (!params.item_id || !params.status) return missing("item_id, status");
+            const item = await deps.client.moveLifeItem(params.item_id, params.status);
+            return {
+              content: [{ type: "text" as const, text: `Moved item to "${item.status}"` }],
+              details: item,
+            };
+          }
           case "complete": {
-            if (!params.item_id) {
-              return {
-                content: [{ type: "text" as const, text: "'item_id' is required for action='complete'" }],
-                details: { error: "missing_item_id" },
-              };
-            }
+            if (!params.item_id) return missing("item_id");
             await deps.client.completeLifeItem(params.item_id);
             return {
               content: [{ type: "text" as const, text: `Completed life item ${params.item_id}` }],
@@ -125,12 +173,7 @@ export function createMindLifeTool(deps: ToolDeps) {
             };
           }
           case "delete": {
-            if (!params.item_id) {
-              return {
-                content: [{ type: "text" as const, text: "'item_id' is required for action='delete'" }],
-                details: { error: "missing_item_id" },
-              };
-            }
+            if (!params.item_id) return missing("item_id");
             await deps.client.deleteLifeItem(params.item_id);
             return {
               content: [{ type: "text" as const, text: `Deleted life item ${params.item_id}` }],
@@ -138,14 +181,7 @@ export function createMindLifeTool(deps: ToolDeps) {
             };
           }
           case "bulk_delete": {
-            if (!params.item_ids || params.item_ids.length === 0) {
-              return {
-                content: [
-                  { type: "text" as const, text: "'item_ids' (a non-empty array) is required for action='bulk_delete'" },
-                ],
-                details: { error: "missing_item_ids" },
-              };
-            }
+            if (!params.item_ids || params.item_ids.length === 0) return missing("item_ids");
             let deleted = 0;
             const notFound: string[] = [];
             for (let i = 0; i < params.item_ids.length; i += BULK_CHUNK) {
@@ -161,8 +197,7 @@ export function createMindLifeTool(deps: ToolDeps) {
             };
           }
           case "clear": {
-            // Delete EVERY item on the board. The list API returns up to 100
-            // per call with no offset, so list-then-delete in waves until empty.
+            // Plugin extension: wipe the whole board.
             let deleted = 0;
             let rounds = 0;
             for (;;) {
@@ -198,6 +233,71 @@ export function createMindLifeTool(deps: ToolDeps) {
               details: { deleted_count: deleted, cleared: true },
             };
           }
+          case "calendar_list": {
+            const r = await deps.client.listCalendarEvents();
+            const lines = r.events.map(
+              (e) => `• ${e.title}${e.start_time ? ` @ ${e.start_time}` : ""}${e.all_day ? " (all-day)" : ""}`,
+            );
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: lines.length ? `${r.events.length} event(s):\n${lines.join("\n")}` : "No calendar events.",
+                },
+              ],
+              details: r,
+            };
+          }
+          case "calendar_create": {
+            if (!params.title || !params.start_time) return missing("title, start_time");
+            const e = await deps.client.createCalendarEvent({
+              title: params.title,
+              description: params.description,
+              start_time: params.start_time,
+              end_time: params.end_time,
+              all_day: params.all_day,
+            });
+            return {
+              content: [{ type: "text" as const, text: `Created event "${e.title}" (id: ${e.event_id})` }],
+              details: e,
+            };
+          }
+          case "calendar_update": {
+            if (!params.event_id) return missing("event_id");
+            const patch: Record<string, unknown> = {};
+            if (params.title !== undefined) patch.title = params.title;
+            if (params.description !== undefined) patch.description = params.description;
+            if (params.start_time !== undefined) patch.start_time = params.start_time;
+            if (params.end_time !== undefined) patch.end_time = params.end_time;
+            if (params.all_day !== undefined) patch.all_day = params.all_day;
+            const e = await deps.client.updateCalendarEvent(params.event_id, patch);
+            return {
+              content: [{ type: "text" as const, text: `Updated event "${e.title}"` }],
+              details: e,
+            };
+          }
+          case "calendar_delete": {
+            if (!params.event_id) return missing("event_id");
+            await deps.client.deleteCalendarEvent(params.event_id);
+            return {
+              content: [{ type: "text" as const, text: `Deleted event ${params.event_id}` }],
+              details: { event_id: params.event_id, status: "deleted" },
+            };
+          }
+          case "stats": {
+            const s = await deps.client.lifeStats();
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Life stats: ${s.total_items} total · completion ${Math.round((s.completion_rate ?? 0) * 100)}%\nBy status: ${Object.entries(s.status_counts ?? {})
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(", ")}`,
+                },
+              ],
+              details: s,
+            };
+          }
         }
       } catch (err) {
         const msg = (err as Error).message;
@@ -207,5 +307,12 @@ export function createMindLifeTool(deps: ToolDeps) {
         };
       }
     },
+  };
+}
+
+function missing(fields: string) {
+  return {
+    content: [{ type: "text" as const, text: `Required: ${fields}` }],
+    details: { error: `missing: ${fields}` },
   };
 }

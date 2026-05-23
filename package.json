@@ -1,7 +1,7 @@
 {
   "name": "@astramindapp/openclaw-mind",
-  "version": "0.3.1",
-  "description": "MIND personal knowledge graph for OpenClaw — true KG, document folders, 50+ models, MINDsense emotional intelligence, life management, projects & tasks, CRM. The most complete memory plugin for AI agents.",
+  "version": "0.5.0",
+  "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions), full canonical parity with @astramindapp/mcp-server. Auto-recall + auto-capture lifecycle hooks. Memory, life, CRM, knowledge graph, MINDsense emotional intelligence, agents, tickets, Featured Minds Portal (full admin CRUD over the public marketplace), multi-MIND accounts. The most complete memory plugin for AI agents.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -39,7 +39,9 @@
     "emotional-intelligence",
     "mindsense",
     "crm",
-    "life-management"
+    "life-management",
+    "agents",
+    "agent-command-center"
   ],
   "author": "Astra AI <hello@theastraway.com>",
   "homepage": "https://www.m-i-n-d.ai/openclaw",
@@ -59,8 +61,8 @@
       "minGatewayVersion": ">=2026.3.28"
     },
     "build": {
-      "openclawVersion": "2026.4.1",
-      "pluginSdkVersion": "2026.4.1"
+      "openclawVersion": "2026.5.18",
+      "pluginSdkVersion": "2026.5.18"
     }
   },
   "dependencies": {
@@ -71,7 +73,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "openclaw": "^2026.4.9",
+    "openclaw": "^2026.5.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
