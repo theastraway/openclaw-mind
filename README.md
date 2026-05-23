@@ -1,6 +1,6 @@
 # @astramindapp/openclaw-mind
 
-**MIND personal knowledge graph for OpenClaw.** 13 tools, 4 skills, full lifecycle hooks. The most complete memory plugin for AI agents.
+**MIND personal knowledge graph for OpenClaw.** 24 tools, 147 actions, 4 skills, full lifecycle hooks. The most complete memory plugin for AI agents — full canonical parity with `@astramindapp/mcp-server`.
 
 Other memory plugins store text. **MIND understands it.**
 
@@ -22,7 +22,7 @@ openclaw plugins install @astramindapp/openclaw-mind
 
 | Feature | MIND | Mem0 | Anthropic Memory MCP |
 |---------|------|------|----------------------|
-| Tools | **13** | 8 | 8 |
+| Tools | **24** | 8 | 8 |
 | Knowledge graph | ✅ true KG | ❌ vectors only | ❌ JSON |
 | 50+ AI models | ✅ | ❌ provider-agnostic but no UI | ❌ Claude only |
 | Emotional intelligence | ✅ MINDsense (patent-pending) | ❌ | ❌ |
@@ -74,23 +74,59 @@ openclaw mind import
 
 This reads `~/.openclaw/workspace/` and ingests `SOUL.md`, `IDENTITY.md`, `USER.md`, `MEMORY.md`, and the daily memory directory into your MIND knowledge graph — with automatic entity extraction.
 
-## Tools
+## Tools (24)
 
-| Tool | What It Does |
-|------|-------------|
-| `mind_search` | Hybrid semantic + graph search across the KG |
-| `mind_add` | Store content with auto entity/relationship extraction |
-| `mind_get` | Retrieve a memory by ID |
-| `mind_list` | Paginated list of memories |
-| `mind_update` | Update an existing memory |
-| `mind_delete` | Soft delete with retention policy |
-| `mind_folders` | Organize documents into folders — list, create, rename, move, delete, file documents |
-| `mind_query_graph` | Graph traversal queries — find connected entities |
-| `mind_recall_emotional` | MINDsense-weighted recall — emotionally salient memories first |
-| `mind_context` | Load persistent identity (soul, user, rules, priorities, recent) |
-| `mind_life` | Manage the LIFE board — goals and projects (the top-level items) |
-| `mind_tasks` | Manage action-plan items inside a project — create/list/update/complete/assign tasks |
-| `mind_crm_log` | Log contacts and interaction history |
+| Tool | Actions | What It Does |
+|------|---------|-------------|
+| `mind_query` | 1 | Semantic + graph search (5 modes: hybrid / mix / global / local / naive) |
+| `mind_remember` | 5 | Store / search / get / list / delete — documents, entries, thoughts |
+| `mind_context` | 1 | Load persistent identity, preferences, rules, priorities, recent activity |
+| `mind_folders` | 6 | Organize documents into folders — list, create, rename, move, delete, file |
+| `mind_save_typed` / `mind_list_templates` / `mind_get_template` / `mind_bootstrap_templates` | 4 | The 16 Front Layer typed-document templates (SOUL, IDENTITY, BELIEFS, USER, AGENTS, TOOLS, SENSES, SKILLS, BEHAVIOR, LESSON, DECISION, POLICY, …) |
+| `mind_life` | 13 | Goals, projects, tasks + full calendar management + productivity stats |
+| `mind_tasks` | 9 | Site-wide tasks — assignable work items on projects, contacts, or agents, plus completion reports |
+| `mind_crm` | 7 | Contacts, pipeline stages, activity logging, interaction history |
+| `mind_graph` | 3 | Graph stats, diagnostics, entity labels |
+| `mind_sense` | 7 | MINDsense emotional intelligence — state, signals, timeline, KG weights, spikes |
+| `mind_profile` | 9 | Profile, custom system prompts, LLM model selection |
+| `mind_insights` | 7 | Autonomous Learning Engine insights, weekly summaries, feedback |
+| `mind_research` | 3 | Launch autonomous deep research jobs |
+| `mind_train` | 7 | Self-training sessions + save chats to KG |
+| `mind_social` | 14 | Thoughts (posts), social feed, communities, likes, comments |
+| `mind_notify` | 4 | Notifications, mark read, stats |
+| `mind_automate` | 6 | Scheduled automations, event triggers, execution history |
+| `mind_accounts` | 6 | Multi-MIND ownership — list/create/delete MINDs, manage owners/viewers, invitations |
+| `mind_admin` | 11 | **Admin-only.** User provisioning + the **Featured Minds Portal**: full CRUD over the public marketplace (get_full / update / update_owner_profile / reorder / delete), tier/credit management |
+| `mind_agents` | 21 | **Admin-only.** Agent Command Center — list/search/get/create/update/delete agents, heartbeats, probes, activity log, fleet seeding, invoice linking, ownership transfer + sharing |
+| `mind_tickets` | 7 | **Admin-only.** Agent ticket queue — file, view, answer (comment), triage, resolve, delete client feedback/bugs/ideas on any agent |
+
+### Featured Minds Portal (admin)
+
+`mind_admin` drives `https://m-i-n-d.ai/#/admin/featuredmindsportal` end-to-end. The catalog (`featured_minds` collection) and the linked owner profile (`user_profiles`) edited together so changes hit `https://m-i-n-d.ai/m/{username}` immediately. Requires an admin-scoped MIND API key.
+
+| Action | Description |
+|--------|-------------|
+| `create_featured_mind` | Promote a user's MIND into the featured catalog |
+| `list_featured_minds` | List every featured mind with `mind_id`, `display_order`, `featured`, `is_public` |
+| `get_featured_mind_full` | Bundled view: featured_mind + linked user_profile + available_models catalog (what the portal side sheet loads) |
+| `update_featured_mind` | Catalog fields: title / subtitle / description / tags / featured / display_order / is_public / avatar_url / banner_url / price |
+| `update_featured_mind_owner_profile` | **Write-through to user_profiles**: preferred_llm_model, public_mind_prompt, chat_temperature, chat_reasoning_effort, public_mind_enabled/tagline/greeting/persona, bio, avatar_url, banner_url. Pass `null` on preferred_llm_model to clear and use platform default. |
+| `reorder_featured_minds` | Bulk display_order via `ordered_mind_ids` list — index becomes order |
+| `delete_featured_mind` | Remove from catalog. User's underlying MIND is preserved. |
+
+Example:
+```ts
+// Pick a model + prompt for a featured MIND from inside an OpenClaw agent
+mind_admin({ action: "list_featured_minds" })
+mind_admin({
+  action: "update_featured_mind_owner_profile",
+  mind_id: "<id>",
+  preferred_llm_model: "anthropic/claude-sonnet-4.6",
+  chat_temperature: 0.7,
+  public_mind_prompt: "Answer in three short sentences."
+})
+// → /m/{username} now uses the new model + prompt + temperature
+```
 
 ## Skills (Agentic Memory Protocols)
 
