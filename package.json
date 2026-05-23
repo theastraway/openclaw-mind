@@ -1,6 +1,6 @@
 {
   "name": "@astramindapp/openclaw-mind",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions), full canonical parity with @astramindapp/mcp-server. Auto-recall + auto-capture lifecycle hooks. Memory, life, CRM, knowledge graph, MINDsense emotional intelligence, agents, tickets, Featured Minds Portal (full admin CRUD over the public marketplace), multi-MIND accounts. The most complete memory plugin for AI agents.",
   "license": "MIT",
   "type": "module",
