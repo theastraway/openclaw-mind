@@ -1,8 +1,8 @@
 {
   "id": "openclaw-mind",
   "name": "MIND",
-  "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions). Full canonical parity with @astramindapp/mcp-server: memory (query / remember / context / folders / save_typed / templates), work (life / tasks / crm), graph + emotional intelligence (graph / sense), self (profile / insights / research / train), social, ops (notify / automate / accounts), admin (admin now includes the Featured Minds Portal CRUD: get_featured_mind_full, update_featured_mind_owner_profile, reorder_featured_minds, delete_featured_mind; agents; tickets). Auto-recall and auto-capture run on every turn.",
-  "version": "0.5.1",
+  "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions). Full canonical parity with @astramindapp/mcp-server: memory (query / remember / context / folders / save_typed / templates), work (life / tasks / crm), graph + emotional intelligence (graph / sense), self (profile / insights / research / train), social, ops (notify / automate / accounts), admin (Featured Minds Portal CRUD + Influencer Factory persona fields archetype/voice/seed-image/niche-tags/kg-scope/agent-posting on create_featured_mind and update_featured_mind; agents; tickets). Auto-recall and auto-capture run on every turn.",
+  "version": "0.6.0",
   "kind": "memory",
   "skills": [
     "skills"

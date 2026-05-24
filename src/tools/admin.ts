@@ -73,6 +73,37 @@ const AdminParameters = Type.Object({
     ),
   ),
   bio: Type.Optional(Type.String({ description: "Owner bio (≤500 chars)." })),
+  // Influencer Factory fields (writable via create_featured_mind + update_featured_mind)
+  archetype_id: Type.Optional(
+    Type.Union([Type.String(), Type.Null()], {
+      description: "Influencer Factory: archetype persona id. Pass null to clear.",
+    }),
+  ),
+  voice_id: Type.Optional(
+    Type.Union([Type.String(), Type.Null()], {
+      description: "Influencer Factory: ElevenLabs voice id used by this persona. Pass null to clear.",
+    }),
+  ),
+  seed_image_url: Type.Optional(
+    Type.Union([Type.String(), Type.Null()], {
+      description: "Influencer Factory: anchor seed image URL (image-to-image variants pin to this; don't chain). Pass null to clear.",
+    }),
+  ),
+  niche_tags: Type.Optional(
+    Type.Array(Type.String(), {
+      description: "Influencer Factory: niche/topic tags (separate from catalog `tags`).",
+    }),
+  ),
+  kg_scope_template_id: Type.Optional(
+    Type.Union([Type.String(), Type.Null()], {
+      description: "Influencer Factory: KG-scope template id bounding what this persona knows/talks about. Pass null to clear.",
+    }),
+  ),
+  agent_posting_enabled: Type.Optional(
+    Type.Boolean({
+      description: "Influencer Factory: gate that lets autonomous agents post on this persona's behalf. Dark by default.",
+    }),
+  ),
   // reorder
   ordered_mind_ids: Type.Optional(
     Type.Array(Type.String(), { description: "Full ordered list of mind_ids — index becomes display_order." }),
@@ -133,6 +164,7 @@ export function createMindAdminTool(deps: ToolDeps) {
             const r = await deps.client.adminCreateFeaturedMind({
               username: params.username,
               title: params.title,
+              subtitle: params.subtitle,
               description: params.description,
               tags: params.tags,
               price: params.price,
@@ -140,6 +172,14 @@ export function createMindAdminTool(deps: ToolDeps) {
               display_order: params.display_order,
               is_public: params.is_public,
               avatar_url: params.avatar_url,
+              banner_url: params.banner_url,
+              // Influencer Factory extensions
+              archetype_id: params.archetype_id,
+              voice_id: params.voice_id,
+              seed_image_url: params.seed_image_url,
+              niche_tags: params.niche_tags,
+              kg_scope_template_id: params.kg_scope_template_id,
+              agent_posting_enabled: params.agent_posting_enabled,
             });
             return {
               content: [{ type: "text" as const, text: `Created featured mind "${r.title}" (id: ${r.mind_id})` }],
@@ -174,6 +214,13 @@ export function createMindAdminTool(deps: ToolDeps) {
             if (params.is_public !== undefined) patch.is_public = params.is_public;
             if (params.avatar_url !== undefined) patch.avatar_url = params.avatar_url;
             if (params.banner_url !== undefined) patch.banner_url = params.banner_url;
+            // Influencer Factory fields
+            if (params.archetype_id !== undefined) patch.archetype_id = params.archetype_id;
+            if (params.voice_id !== undefined) patch.voice_id = params.voice_id;
+            if (params.seed_image_url !== undefined) patch.seed_image_url = params.seed_image_url;
+            if (params.niche_tags !== undefined) patch.niche_tags = params.niche_tags;
+            if (params.kg_scope_template_id !== undefined) patch.kg_scope_template_id = params.kg_scope_template_id;
+            if (params.agent_posting_enabled !== undefined) patch.agent_posting_enabled = params.agent_posting_enabled;
             const r = await deps.client.adminUpdateFeaturedMind(params.mind_id, patch);
             return {
               content: [{ type: "text" as const, text: `Updated featured mind "${r.title}"` }],
