@@ -137,6 +137,27 @@ mind_admin({
 | `mind-emotional-encoding` | MINDsense valence/arousal scoring on every captured fact |
 | `mind-graph-recall` | Graph traversal recall — find everything connected to an entity, not just text similar to it |
 
+## Optional X/Twitter Source Memories with TweetClaw
+
+Install [TweetClaw](https://github.com/Xquik-dev/tweetclaw) beside MIND when an OpenClaw agent needs public X/Twitter source context before writing durable memories:
+
+```bash
+openclaw plugins install @astramindapp/openclaw-mind
+openclaw plugins install @xquik/tweetclaw
+```
+
+Use TweetClaw for query-led source discovery, then store only reviewed memory packets in MIND:
+
+| Step | Tooling | Keep In MIND |
+|------|---------|--------------|
+| Discover | TweetClaw `search tweets`, `search tweet replies`, user lookup, follower export, monitors, and webhooks | Query, public tweet URLs, handles, timestamps, and why each source matters |
+| Review | Agent or human review before storage | Short summary, confidence, source list, and next action |
+| Store | `mind_remember` or `mind_save_typed` | Durable decision, relationship, market signal, CRM note, or research finding |
+
+Do not store raw direct messages, full follower exports, unreviewed post drafts, or private config values in MIND. For visible X/Twitter actions such as post tweets, post tweet replies, media upload, or direct messages, require explicit review before using TweetClaw.
+
+See [`examples/tweetclaw-x-signal-memory.md`](examples/tweetclaw-x-signal-memory.md) for a concrete handoff recipe.
+
 ## Configuration
 
 All configuration is optional. Defaults are sensible.
