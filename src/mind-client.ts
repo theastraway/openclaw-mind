@@ -1483,13 +1483,22 @@ export class MindClient {
   async adminCreateFeaturedMind(req: {
     username: string;
     title: string;
+    subtitle?: string | null;
     description?: string;
     tags?: string[];
     price?: number;
     featured?: boolean;
     display_order?: number;
     is_public?: boolean;
-    avatar_url?: string;
+    avatar_url?: string | null;
+    banner_url?: string | null;
+    // Influencer Factory extensions
+    archetype_id?: string | null;
+    voice_id?: string | null;
+    seed_image_url?: string | null;
+    niche_tags?: string[];
+    kg_scope_template_id?: string | null;
+    agent_posting_enabled?: boolean;
   }): Promise<{ mind_id: string; username: string; title: string; [key: string]: unknown }> {
     return this.request("POST", "/admin/featured-minds", req);
   }
