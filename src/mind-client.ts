@@ -1805,6 +1805,179 @@ export class MindClient {
     );
   }
 
+  // ─── Influencer Factory (Phase 1) ───
+  // Admin-gated; whole router is dark unless IF_FEATURE_FLAG_ENABLED=true on server.
+
+  async ifHealth(): Promise<Record<string, unknown>> {
+    return this.request("GET", "/api/influencerfactory/health");
+  }
+
+  async ifCreatePersona(req: {
+    username: string;
+    display_name: string;
+    niche?: string;
+    pillars?: string[];
+    tone?: string;
+    archetype_id?: string;
+    kg_scope_template_id?: string;
+    niche_tags?: string[];
+    daily_credit_ceiling_usd?: number;
+  }): Promise<Record<string, unknown>> {
+    return this.request("POST", "/api/influencerfactory/personas", req);
+  }
+
+  async ifListPersonas(params?: {
+    status?: "draft" | "active" | "paused";
+    search?: string;
+    include_deleted?: boolean;
+  }): Promise<Array<Record<string, unknown>>> {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set("status", params.status);
+    if (params?.search) qs.set("search", params.search);
+    if (params?.include_deleted) qs.set("include_deleted", "true");
+    const q = qs.toString();
+    return this.request("GET", `/api/influencerfactory/personas${q ? `?${q}` : ""}`);
+  }
+
+  async ifGetPersonaFull(personaMindId: string): Promise<Record<string, unknown>> {
+    return this.request(
+      "GET",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/full`,
+    );
+  }
+
+  async ifUpdatePersona(
+    personaMindId: string,
+    patch: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "PUT",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}`,
+      patch,
+    );
+  }
+
+  async ifDeletePersona(personaMindId: string): Promise<Record<string, unknown>> {
+    return this.request(
+      "DELETE",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}`,
+    );
+  }
+
+  async ifAnchorAIGenerate(
+    personaMindId: string,
+    body: { prompt: string; model?: "nano_banana_pro" | "flux" },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/face/anchor/ai-generate`,
+      body,
+    );
+  }
+
+  async ifRequestVariants(
+    personaMindId: string,
+    body: { count: number; prompt_modifier?: string; sync_fallback?: boolean },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/face/variants`,
+      body,
+    );
+  }
+
+  async ifListVariants(personaMindId: string): Promise<Record<string, unknown>> {
+    return this.request(
+      "GET",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/face/variants`,
+    );
+  }
+
+  async ifSearchVoiceLibrary(params?: {
+    q?: string;
+    gender?: string;
+    accent?: string;
+    age?: string;
+    use_case?: string;
+    page_size?: number;
+  }): Promise<Record<string, unknown>> {
+    const qs = new URLSearchParams();
+    if (params?.q) qs.set("q", params.q);
+    if (params?.gender) qs.set("gender", params.gender);
+    if (params?.accent) qs.set("accent", params.accent);
+    if (params?.age) qs.set("age", params.age);
+    if (params?.use_case) qs.set("use_case", params.use_case);
+    if (params?.page_size) qs.set("page_size", String(params.page_size));
+    const q = qs.toString();
+    return this.request("GET", `/api/influencerfactory/voice-library${q ? `?${q}` : ""}`);
+  }
+
+  async ifSetVoiceLibrary(
+    personaMindId: string,
+    body: { voice_id: string; name?: string },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/voice/library`,
+      { source: "library", ...body },
+    );
+  }
+
+  async ifVoiceSample(personaMindId: string, text: string): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/voice/sample`,
+      { text },
+    );
+  }
+
+  async ifUpdateBios(
+    personaMindId: string,
+    body: { bios: Record<string, string>; generate_with_llm?: boolean },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "PUT",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/bios`,
+      body,
+    );
+  }
+
+  async ifBlotatoWhoami(): Promise<Record<string, unknown>> {
+    return this.request("GET", "/api/influencerfactory/blotato/whoami");
+  }
+
+  async ifBlotatoAccounts(): Promise<Record<string, unknown>> {
+    return this.request("GET", "/api/influencerfactory/blotato/accounts");
+  }
+
+  async ifRegisterBlotato(
+    personaMindId: string,
+    platform: string,
+    body: {
+      account_id: string;
+      page_id?: string;
+      board_id?: string;
+      handle?: string;
+      media_type?: "story" | "reel";
+    },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/blotato/${encodeURIComponent(platform)}`,
+      body,
+    );
+  }
+
+  async ifUnregisterBlotato(
+    personaMindId: string,
+    platform: string,
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "DELETE",
+      `/api/influencerfactory/personas/${encodeURIComponent(personaMindId)}/blotato/${encodeURIComponent(platform)}`,
+    );
+  }
+
   // ─── Internal HTTP layer ───
 
   private async request<T>(

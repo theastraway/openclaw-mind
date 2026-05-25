@@ -1,7 +1,7 @@
 {
   "name": "@astramindapp/openclaw-mind",
-  "version": "0.6.0",
-  "description": "MIND personal knowledge graph for OpenClaw — 24 tools (147 actions), full canonical parity with @astramindapp/mcp-server. Auto-recall + auto-capture lifecycle hooks. Memory, life, CRM, knowledge graph, MINDsense emotional intelligence, agents, tickets, Featured Minds Portal (full admin CRUD over the public marketplace, includes Influencer Factory persona fields: archetype, voice, seed-image, niche-tags, kg-scope, agent-posting), multi-MIND accounts. The most complete memory plugin for AI agents.",
+  "version": "0.7.0",
+  "description": "MIND personal knowledge graph for OpenClaw — 25 tools (164 actions), full canonical parity with @astramindapp/mcp-server. Auto-recall + auto-capture lifecycle hooks. Memory, life, CRM, knowledge graph, MINDsense emotional intelligence, agents, tickets, Featured Minds Portal (full admin CRUD over the public marketplace, includes Influencer Factory persona fields: archetype, voice, seed-image, niche-tags, kg-scope, agent-posting), Influencer Factory Command Center (admin-only synthetic-persona fleet — persona CRUD, Nano Banana face anchor + image-to-image variants, ElevenLabs voice library + clone + sample, per-platform bios with LLM drafter, Blotato account registration), multi-MIND accounts. The most complete memory plugin for AI agents.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

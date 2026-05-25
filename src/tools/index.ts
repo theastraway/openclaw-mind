@@ -53,6 +53,7 @@ import { createMindAccountsTool } from "./accounts.js";
 import { createMindAdminTool } from "./admin.js";
 import { createMindAgentsTool } from "./agents.js";
 import { createMindTicketsTool } from "./tickets.js";
+import { createMindPersonasTool } from "./personas.js";
 
 export interface ToolDeps {
   client: MindClient;
@@ -111,10 +112,11 @@ export function registerAllTools(
   // Multi-MIND accounts (1)
   api.registerTool(createMindAccountsTool(deps));
 
-  // Admin-only (3) — only useful with an admin-scoped MIND API key
+  // Admin-only (4) — only useful with an admin-scoped MIND API key
   api.registerTool(createMindAdminTool(deps));
   api.registerTool(createMindAgentsTool(deps));
   api.registerTool(createMindTicketsTool(deps));
+  api.registerTool(createMindPersonasTool(deps));
 
-  // Total: 24 canonical tools (or 22 with MINDsense/Life disabled).
+  // Total: 25 canonical tools (or 23 with MINDsense/Life disabled).
 }
