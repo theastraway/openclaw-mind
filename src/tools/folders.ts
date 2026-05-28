@@ -19,10 +19,11 @@ const FoldersParameters = Type.Object({
       Type.Literal("move"),
       Type.Literal("delete"),
       Type.Literal("move_documents"),
+      Type.Literal("set_hint"),
     ],
     {
       description:
-        "list (all folders + counts), create (new folder), rename (change a folder's name), move (re-nest a folder), delete (remove a folder — its documents and subfolders move up a level, nothing is deleted), move_documents (file documents into a folder).",
+        "list (all folders + counts + routing hints), create (new folder; pass routing_hint to enable agent-routing), rename (change a folder's name), move (re-nest a folder), delete (remove a folder — its documents and subfolders move up a level, nothing is deleted), move_documents (file documents into a folder), set_hint (write/clear the routing_hint that mind_folder_suggest reads).",
     },
   ),
   name: Type.Optional(
@@ -31,7 +32,7 @@ const FoldersParameters = Type.Object({
   folder_id: Type.Optional(
     Type.String({
       description:
-        "Folder id — the folder to rename/move/delete, or the destination for move_documents (omit or pass 'root' to file at the top level).",
+        "Folder id — the folder to rename/move/delete/set_hint, or the destination for move_documents (omit or pass 'root' to file at the top level).",
     }),
   ),
   parent_id: Type.Optional(
@@ -44,6 +45,12 @@ const FoldersParameters = Type.Object({
       description: "Document ids to file — required for move_documents.",
     }),
   ),
+  routing_hint: Type.Optional(
+    Type.String({
+      description:
+        "Free-text instruction answering 'when should MIND save things to this folder?'. Read by mind_folder_suggest to LLM-route new content. Pass on create to set up-front; pass on set_hint to update. Pass empty string to clear (disables the folder from auto-routing).",
+    }),
+  ),
 });
 
 type FoldersParams = Static<typeof FoldersParameters>;
@@ -53,7 +60,7 @@ export function createMindFoldersTool(deps: ToolDeps) {
     name: "mind_folders",
     label: "MIND Folders",
     description:
-      "Organize MIND documents into folders. Folders are a presentation layer — the knowledge graph still indexes and retrieves across every document regardless of folder. Use mind_add to create a document, then mind_folders move_documents to file it. Actions: list, create, rename, move, delete, move_documents.",
+      "Organize MIND documents into folders. Folders are a presentation layer — the knowledge graph still indexes and retrieves across every document regardless of folder. Use mind_add to create a document, then mind_folders move_documents to file it. Actions: list, create, rename, move, delete, move_documents, set_hint (set the agent-routing hint read by mind_folder_suggest).",
     parameters: FoldersParameters,
     async execute(_toolCallId: string, params: FoldersParams) {
       try {
@@ -74,7 +81,11 @@ export function createMindFoldersTool(deps: ToolDeps) {
             const byId = new Map(res.folders.map((f) => [f.id, f]));
             const lines = res.folders.map((f) => {
               const parent = f.parent_id ? (byId.get(f.parent_id)?.name ?? "?") : "(top level)";
-              return `• ${f.name} — ${f.document_count ?? 0} doc(s) · id: ${f.id} · parent: ${parent}`;
+              const hint = (f.routing_hint || "").trim();
+              const hintTail = hint
+                ? ` · hint: ${hint.length > 80 ? hint.slice(0, 80) + "…" : hint}`
+                : "";
+              return `• ${f.name} — ${f.document_count ?? 0} doc(s) · id: ${f.id} · parent: ${parent}${hintTail}`;
             });
             return {
               content: [
@@ -92,15 +103,25 @@ export function createMindFoldersTool(deps: ToolDeps) {
           }
           case "create": {
             if (!params.name) throw new Error("'name' is required to create a folder");
-            const res = await deps.client.createFolder(params.name, params.parent_id ?? null);
+            const res = await deps.client.createFolder(
+              params.name,
+              params.parent_id ?? null,
+              params.routing_hint,
+            );
             return {
               content: [
                 {
                   type: "text" as const,
-                  text: `Created folder "${res.folder.name}" (id: ${res.folder.id})`,
+                  text: `Created folder "${res.folder.name}" (id: ${res.folder.id})${
+                    params.routing_hint ? " · routing hint set" : ""
+                  }`,
                 },
               ],
-              details: { id: res.folder.id, name: res.folder.name },
+              details: {
+                id: res.folder.id,
+                name: res.folder.name,
+                routing_hint: res.folder.routing_hint,
+              },
             };
           }
           case "rename": {
@@ -161,6 +182,33 @@ export function createMindFoldersTool(deps: ToolDeps) {
                 },
               ],
               details: res,
+            };
+          }
+          case "set_hint": {
+            if (!params.folder_id)
+              throw new Error("'folder_id' is required to set a routing hint");
+            if (params.routing_hint === undefined)
+              throw new Error(
+                "'routing_hint' is required for set_hint (pass empty string to clear)",
+              );
+            const res = await deps.client.updateFolder(params.folder_id, {
+              routing_hint: params.routing_hint,
+            });
+            const cleared = !params.routing_hint.trim();
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: cleared
+                    ? `Cleared routing hint on "${res.folder.name}" — folder is no longer auto-routed.`
+                    : `Routing hint set on "${res.folder.name}". mind_folder_suggest will now consider this folder.`,
+                },
+              ],
+              details: {
+                id: res.folder.id,
+                name: res.folder.name,
+                routing_hint: res.folder.routing_hint,
+              },
             };
           }
           default:
