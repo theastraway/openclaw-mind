@@ -1,7 +1,7 @@
 /**
- * Tool registration entry point — full 24-tool canonical surface.
+ * Tool registration entry point — full 27-tool canonical surface.
  *
- * Every tool here matches @astramindapp/mcp-server v0.12.x by name, action,
+ * Every tool here matches @astramindapp/mcp-server v0.19.x by name, action,
  * and parameter shape. An OpenClaw agent and a Claude Code agent talk to
  * MIND identically.
  */
@@ -17,6 +17,8 @@ import { createMindContextTool } from "./context.js";
 
 // Document organization
 import { createMindFoldersTool } from "./folders.js";
+import { createMindFolderRoutesTool } from "./folder-routes.js";
+import { createMindFolderSuggestTool } from "./folder-suggest.js";
 
 // Life + tasks + CRM
 import { createMindLifeTool } from "./life.js";
@@ -72,8 +74,10 @@ export function registerAllTools(
   api.registerTool(createMindRememberTool(deps));
   api.registerTool(createMindContextTool(deps));
 
-  // Document organization (1)
+  // Document organization (3)
   api.registerTool(createMindFoldersTool(deps));
+  api.registerTool(createMindFolderRoutesTool(deps));
+  api.registerTool(createMindFolderSuggestTool(deps));
 
   // Life + tasks + CRM (3)
   if (config.enableLifeIntegration) {
@@ -118,5 +122,5 @@ export function registerAllTools(
   api.registerTool(createMindTicketsTool(deps));
   api.registerTool(createMindPersonasTool(deps));
 
-  // Total: 25 canonical tools (or 23 with MINDsense/Life disabled).
+  // Total: 27 canonical tools (or 25 with MINDsense/Life disabled).
 }

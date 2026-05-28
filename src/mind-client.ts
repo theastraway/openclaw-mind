@@ -109,12 +109,46 @@ export interface MindFolder {
   created_at?: string;
   updated_at?: string;
   document_count?: number;
+  /** Free-text instruction read by the LLM folder picker (mind_folder_suggest). */
+  routing_hint?: string;
 }
 
 export interface FolderListResponse {
   folders: MindFolder[];
   unfiled_count: number;
   total_count: number;
+}
+
+// ─── Folder routing (deterministic + LLM) ──────────────────────
+
+export interface FolderRouteCategory {
+  source_type: string;
+  label: string;
+  description: string;
+}
+
+export interface FolderRoutesResponse {
+  categories: FolderRouteCategory[];
+  /** Map of source_type → folder_id for routes the user has configured. */
+  routes: Record<string, string>;
+}
+
+export interface FolderSuggestionResponse {
+  folder_id: string | null;
+  folder_name: string | null;
+  confidence: number;
+  reason: string;
+}
+
+export interface FolderApplyRecommendedResponse {
+  created: string[];
+  reused: string[];
+  hint_updated: string[];
+  routes_set: Array<{
+    source_type: string;
+    folder_id: string;
+    folder_name: string;
+  }>;
 }
 
 // ─── Entries / Thoughts ────────────────────────────────────────
@@ -710,16 +744,19 @@ export class MindClient {
     return this.request<FolderListResponse>("GET", "/developer/v1/folders");
   }
 
-  async createFolder(name: string, parentId?: string | null): Promise<{ folder: MindFolder }> {
-    return this.request<{ folder: MindFolder }>("POST", "/developer/v1/folders", {
-      name,
-      parent_id: parentId ?? null,
-    });
+  async createFolder(
+    name: string,
+    parentId?: string | null,
+    routingHint?: string,
+  ): Promise<{ folder: MindFolder }> {
+    const body: Record<string, unknown> = { name, parent_id: parentId ?? null };
+    if (routingHint !== undefined) body.routing_hint = routingHint;
+    return this.request<{ folder: MindFolder }>("POST", "/developer/v1/folders", body);
   }
 
   async updateFolder(
     folderId: string,
-    body: { name?: string; parent_id?: string | null },
+    body: { name?: string; parent_id?: string | null; routing_hint?: string },
   ): Promise<{ folder: MindFolder }> {
     return this.request<{ folder: MindFolder }>("PATCH", `/developer/v1/folders/${folderId}`, body);
   }
@@ -738,6 +775,50 @@ export class MindClient {
       doc_ids: docIds,
       folder_id: folderId,
     });
+  }
+
+  // ─── Folder routing + auto-organize ───
+
+  async listFolderRoutes(): Promise<FolderRoutesResponse> {
+    return this.request<FolderRoutesResponse>("GET", "/developer/v1/folders/routes");
+  }
+
+  async setFolderRoute(
+    sourceType: string,
+    folderId: string | null,
+  ): Promise<{ status: string; source_type: string; folder_id?: string }> {
+    return this.request(
+      "PUT",
+      `/developer/v1/folders/routes/${encodeURIComponent(sourceType)}`,
+      { folder_id: folderId },
+    );
+  }
+
+  async clearFolderRoute(
+    sourceType: string,
+  ): Promise<{ status: string; source_type: string }> {
+    return this.request(
+      "DELETE",
+      `/developer/v1/folders/routes/${encodeURIComponent(sourceType)}`,
+    );
+  }
+
+  async suggestFolder(
+    content: string,
+    title?: string,
+  ): Promise<FolderSuggestionResponse> {
+    return this.request<FolderSuggestionResponse>(
+      "POST",
+      "/developer/v1/folders/suggest",
+      { content, title },
+    );
+  }
+
+  async applyRecommendedFolders(): Promise<FolderApplyRecommendedResponse> {
+    return this.request<FolderApplyRecommendedResponse>(
+      "POST",
+      "/developer/v1/folders/auto-organize/apply",
+    );
   }
 
   // ─── Entries ───
