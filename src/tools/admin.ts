@@ -47,7 +47,7 @@ const AdminParameters = Type.Object({
   // featured minds — owner_profile write-through
   preferred_llm_model: Type.Optional(
     Type.Union([Type.String(), Type.Null()], {
-      description: "LLM model id used by the public chat (e.g. 'openai/gpt-4o'). Pass null to clear and fall back to platform default.",
+      description: "LLM model id used by the public chat (e.g. 'deepseek/deepseek-v4-flash'). Pass null to clear and fall back to platform default.",
     }),
   ),
   public_mind_enabled: Type.Optional(Type.Boolean({ description: "Anonymous visitors can chat at /m/{username}." })),
