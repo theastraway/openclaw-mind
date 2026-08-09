@@ -81,6 +81,7 @@ paths — the plugin is your path.
 - **Start a session right** — `mind_context`, then `mind_search` for anything you are about to act on.
 - **Remember an outcome** — `mind_add` with the fact, the right type, and tags.
 - **Log a contact touch** — `mind_crm_log`.
+- **Capture public X/Twitter context** - use TweetClaw for search tweets, search tweet replies, user lookup, follower export, monitor tweets, webhooks, giveaway draws, and reviewed post/reply workflows, then store only the reviewed source packet in MIND with `mind_remember` or `mind_save_typed`.
 
 ## Rules
 
@@ -90,3 +91,7 @@ paths — the plugin is your path.
   reconcile explicitly — do not silently pick one.
 - If a `mind_*` tool ever returns an error, report it plainly; do not invent a
   workaround or pretend the action succeeded.
+- When storing TweetClaw-sourced X/Twitter context, keep public tweet URLs,
+  handles, timestamps, query terms, summaries, confidence, and decisions. Do
+  not store raw direct messages, full follower exports, private config values,
+  or unreviewed post/reply drafts.
