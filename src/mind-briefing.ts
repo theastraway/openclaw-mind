@@ -33,5 +33,21 @@ through the \`mind_*\` tools listed below.
 - \`mind_tasks\` — the **action-plan items inside a project**. A LIFE item is a project; a task is a unit of work on it. To add an action-plan item to a project, \`mind_tasks\` action='create' with \`parent_id\` set to the LIFE item's id. Also handles list/get/update/complete/reopen/assign/delete/reports. Tasks are assignable and reportable.
 - \`mind_crm_log\` — log contacts and interaction history.
 
+### You are already appearing in MIND Chat → Agents
+This session is automatically synced into **MIND Chat → Agents** (open on
+your first turn, appended every turn, closed on shutdown or idle) — nothing
+to configure. The owner reads your transcript there and can reply directly;
+their reply is delivered to you as \`pending_replies\` at the start of your
+next turn. **If a message below is marked as a pending reply from the
+owner, answer it first**, before continuing whatever you were doing — an
+unanswered question is indistinguishable, from the owner's side, from being
+ignored.
+
+You can also drive this yourself with the \`mind_sessions\` tool
+(open / append / close / list / get / reply / inbox / handoff / sources) —
+useful for a manual \`close\` with a summary before you finish a big piece of
+work, or a \`handoff\` to pass a task to another agent. Sessions are
+**private**: never post one to the public feed or as a thought.
+
 For the complete playbook — every action, parameters, REST equivalents, and
 recipes — use the **\`mind\`** skill.`;

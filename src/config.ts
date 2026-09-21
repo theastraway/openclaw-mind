@@ -51,6 +51,17 @@ export interface MindPluginConfig {
   enableMindsense: boolean;
   enableLifeIntegration: boolean;
   enableCrmLogging: boolean;
+  /** Auto-sync this agent's own live session into MIND Chat → Agents
+   * (open on first turn, append every turn, close on shutdown/idle) — see
+   * AGENTS.md §2 SESSION LIFECYCLE. Default: true. Distinct from
+   * autoRecall/autoCapture, which read/write the knowledge graph; this
+   * writes the turn-by-turn transcript so the owner can watch and reply. */
+  enableAgentSessionSync: boolean;
+  /** The MIND Chat sidebar toggle this runtime logs sessions under, e.g.
+   * "openclaw" or "openclaw-2" for a second account. Bare lowercase runtime
+   * slug by convention; a numeric suffix only when one runtime has several
+   * accounts. Auto-creates its MIND source on first open. */
+  agentSessionSourceKey: string;
   skills?: SkillsConfig;
   needsSetup: boolean;
 }
@@ -67,6 +78,8 @@ export interface RawPluginConfig {
   enableMindsense?: boolean;
   enableLifeIntegration?: boolean;
   enableCrmLogging?: boolean;
+  enableAgentSessionSync?: boolean;
+  agentSessionSourceKey?: string;
   skills?: SkillsConfig;
 }
 
@@ -88,6 +101,9 @@ export function resolveConfig(raw: RawPluginConfig | undefined): MindPluginConfi
     enableMindsense: raw?.enableMindsense ?? true,
     enableLifeIntegration: raw?.enableLifeIntegration ?? true,
     enableCrmLogging: raw?.enableCrmLogging ?? true,
+    enableAgentSessionSync: raw?.enableAgentSessionSync ?? true,
+    agentSessionSourceKey:
+      raw?.agentSessionSourceKey ?? process.env.MIND_SESSION_SOURCE_KEY ?? "openclaw",
     skills: raw?.skills,
     needsSetup: !apiKey,
   };
