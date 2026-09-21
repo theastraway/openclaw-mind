@@ -51,6 +51,9 @@ import { createMindAutomateTool } from "./automate.js";
 // Multi-MIND accounts
 import { createMindAccountsTool } from "./accounts.js";
 
+// Agent Sessions (MIND Chat → Agents)
+import { createMindSessionsTool } from "./sessions.js";
+
 // Admin-only
 import { createMindAdminTool } from "./admin.js";
 import { createMindAgentsTool } from "./agents.js";
@@ -116,11 +119,22 @@ export function registerAllTools(
   // Multi-MIND accounts (1)
   api.registerTool(createMindAccountsTool(deps));
 
+  // Agent Sessions (1) — logs this live session into MIND Chat → Agents.
+  // Auto-sync (open/append/close) happens automatically via lifecycle hooks
+  // (see hooks/index.ts) whenever this is enabled; the tool itself is also
+  // exposed so an agent can drive it manually (a rich close summary, a
+  // handoff, sources management). Gated the same way as the other optional
+  // surfaces, and on by default (config.enableAgentSessionSync defaults true)
+  // — this is the whole point: installing the plugin is enough.
+  if (config.enableAgentSessionSync) {
+    api.registerTool(createMindSessionsTool(deps));
+  }
+
   // Admin-only (4) — only useful with an admin-scoped MIND API key
   api.registerTool(createMindAdminTool(deps));
   api.registerTool(createMindAgentsTool(deps));
   api.registerTool(createMindTicketsTool(deps));
   api.registerTool(createMindPersonasTool(deps));
 
-  // Total: 27 canonical tools (or 25 with MINDsense/Life disabled).
+  // Total: 28 canonical tools (or 26 with MINDsense/Life disabled).
 }

@@ -660,6 +660,141 @@ export interface TicketStats {
   open: number;
 }
 
+// ─── Agent Sessions ──────────────────────────────────────────
+// Every external agent (OpenClaw included) logs its live session into MIND
+// Chat as a tagged Agent Session so the owner can read it and reply from
+// MIND Chat → Agents. Backed by backend/routes/agent_session_routes.py,
+// prefix /developer/v1/agent-sessions. See AGENTS.md §2 SESSION LIFECYCLE
+// (github.com/theastraway/agents) for the full protocol this mirrors.
+
+export type AgentSessionRuntime =
+  | "claude-code"
+  | "codex"
+  | "cursor"
+  | "openclaw"
+  | "grok"
+  | "n8n"
+  | "custom"
+  | string;
+
+export type AgentSessionStatus = "active" | "idle" | "ended";
+export type AgentSessionMessageRole = "user" | "assistant" | "system" | "tool";
+export type AgentSessionMessageOrigin = "agent" | "mind";
+
+export interface AgentSessionMessage {
+  message_id: string;
+  session_id: string;
+  user_id?: string;
+  seq: number;
+  role: AgentSessionMessageRole;
+  content: string;
+  origin: AgentSessionMessageOrigin;
+  delivered_at?: string | null;
+  meta?: Record<string, unknown>;
+  created_at: string;
+}
+
+/** Input shape for POST /{session_id}/append — origin defaults server-side
+ * to "agent" when omitted. */
+export interface AgentSessionMessageInput {
+  role: AgentSessionMessageRole;
+  content: string;
+  origin?: "agent";
+  meta?: Record<string, unknown>;
+  created_at?: string;
+}
+
+export interface AgentSessionSource {
+  source_id: string;
+  user_id?: string;
+  key: string;
+  label: string;
+  runtime: AgentSessionRuntime;
+  color?: string | null;
+  wake_url?: string | null;
+  created_at: string;
+  updated_at: string;
+  last_seen_at?: string | null;
+  session_count: number;
+}
+
+export interface AgentSessionRecord {
+  session_id: string;
+  user_id?: string;
+  workspace_id?: string;
+  source_id: string;
+  source_key: string;
+  runtime: AgentSessionRuntime;
+  external_session_id: string;
+  title: string;
+  status: AgentSessionStatus;
+  started_at: string;
+  last_activity_at: string;
+  ended_at?: string | null;
+  machine?: string | null;
+  cwd?: string | null;
+  repo?: string | null;
+  branch?: string | null;
+  model?: string | null;
+  tags?: string[];
+  message_count: number;
+  last_message_preview?: string | null;
+  summary?: string | null;
+  mirror_doc_id?: string | null;
+  unread_for_user: number;
+  pending_reply_count: number;
+  created_at: string;
+  updated_at: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface OpenAgentSessionRequest {
+  source_key: string;
+  external_session_id: string;
+  runtime?: AgentSessionRuntime;
+  source_label?: string;
+  title?: string;
+  machine?: string;
+  cwd?: string;
+  repo?: string;
+  branch?: string;
+  model?: string;
+  tags?: string[];
+}
+
+export interface OpenAgentSessionResponse {
+  session_id: string;
+  resumed: boolean;
+  status: AgentSessionStatus;
+  title: string;
+  pending_replies: AgentSessionMessage[];
+  tail: AgentSessionMessage[];
+}
+
+export interface AppendAgentSessionResponse {
+  ok: boolean;
+  seq_last: number;
+  pending_replies: AgentSessionMessage[];
+}
+
+export interface CloseAgentSessionResponse {
+  ok: boolean;
+  mirror_doc_id?: string | null;
+}
+
+export interface ListAgentSessionsResponse {
+  sessions: AgentSessionRecord[];
+  sources: AgentSessionSource[];
+}
+
+export interface GetAgentSessionResponse extends AgentSessionRecord {
+  messages: AgentSessionMessage[];
+}
+
+export interface AgentSessionInboxResponse {
+  pending_replies: AgentSessionMessage[];
+}
+
 // ─── Client ────────────────────────────────────────────────────
 
 export class MindClient {
@@ -2059,6 +2194,149 @@ export class MindClient {
     );
   }
 
+  // ─── Agent Sessions ───
+  // Logs this OpenClaw agent's live session into MIND Chat → Agents so the
+  // owner can read it and reply. See AGENTS.md §2 SESSION LIFECYCLE.
+  //
+  // NOTE on trailing slashes — this deliberately does NOT follow the literal
+  // "collection GETs need a trailing slash" text in AGENTS.md §2.10. Live
+  // measurement against https://www.m-i-n-d.ai on 2026-09-21 shows the
+  // OPPOSITE for both collection GETs here:
+  //   GET /developer/v1/agent-sessions           -> 200 application/json (uvicorn)
+  //   GET /developer/v1/agent-sessions/           -> 200 text/html (Vercel SPA index.html)
+  //   GET /developer/v1/agent-sessions/sources    -> 200 application/json (uvicorn)
+  //   GET /developer/v1/agent-sessions/sources/   -> 200 text/html (Vercel SPA index.html)
+  // The trailing-slash form doesn't reach the backend at all — it falls
+  // through a Vercel SPA-fallback rewrite and returns the app shell's
+  // index.html instead of session data, which would make `list`/`sources`
+  // silently return garbage. No path in this file has a trailing slash,
+  // matching what @astramindapp/mcp-server's own listAgentSessions actually
+  // does (mcp-server/src/mind-client.ts) as opposed to what its own prose
+  // elsewhere claims. Re-verify with a raw curl before ever "fixing" this
+  // back to match the doc.
+
+  async openAgentSession(req: OpenAgentSessionRequest): Promise<OpenAgentSessionResponse> {
+    return this.request<OpenAgentSessionResponse>(
+      "POST",
+      "/developer/v1/agent-sessions/open",
+      req,
+    );
+  }
+
+  async appendAgentSession(
+    sessionId: string,
+    messages: AgentSessionMessageInput[],
+    title?: string,
+  ): Promise<AppendAgentSessionResponse> {
+    const body: Record<string, unknown> = { messages };
+    if (title !== undefined) body.title = title;
+    return this.request<AppendAgentSessionResponse>(
+      "POST",
+      `/developer/v1/agent-sessions/${encodeURIComponent(sessionId)}/append`,
+      body,
+    );
+  }
+
+  async closeAgentSession(
+    sessionId: string,
+    params: { summary?: string; status?: "ended" } = {},
+  ): Promise<CloseAgentSessionResponse> {
+    return this.request<CloseAgentSessionResponse>(
+      "POST",
+      `/developer/v1/agent-sessions/${encodeURIComponent(sessionId)}/close`,
+      params,
+    );
+  }
+
+  async listAgentSessions(
+    opts: { source_key?: string; status?: string; q?: string; limit?: number; before?: string } = {},
+  ): Promise<ListAgentSessionsResponse> {
+    const params = new URLSearchParams();
+    if (opts.source_key) params.set("source_key", opts.source_key);
+    if (opts.status) params.set("status", opts.status);
+    if (opts.q) params.set("q", opts.q);
+    if (opts.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts.before) params.set("before", opts.before);
+    const qs = params.toString();
+    // No trailing slash — see note above.
+    return this.request<ListAgentSessionsResponse>(
+      "GET",
+      `/developer/v1/agent-sessions${qs ? `?${qs}` : ""}`,
+    );
+  }
+
+  async getAgentSession(
+    sessionId: string,
+    opts: { limit?: number; before_seq?: number } = {},
+  ): Promise<GetAgentSessionResponse> {
+    const params = new URLSearchParams();
+    if (opts.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts.before_seq !== undefined) params.set("before_seq", String(opts.before_seq));
+    const qs = params.toString();
+    return this.request<GetAgentSessionResponse>(
+      "GET",
+      `/developer/v1/agent-sessions/${encodeURIComponent(sessionId)}${qs ? `?${qs}` : ""}`,
+    );
+  }
+
+  async agentSessionInbox(sessionId: string): Promise<AgentSessionInboxResponse> {
+    return this.request<AgentSessionInboxResponse>(
+      "GET",
+      `/developer/v1/agent-sessions/${encodeURIComponent(sessionId)}/inbox`,
+    );
+  }
+
+  async handoffAgentSession(
+    sessionId: string,
+    toSourceKey: string,
+  ): Promise<AgentSessionRecord> {
+    return this.request<AgentSessionRecord>(
+      "POST",
+      `/developer/v1/agent-sessions/${encodeURIComponent(sessionId)}/handoff`,
+      { to_source_key: toSourceKey },
+    );
+  }
+
+  async listAgentSessionSources(): Promise<{ sources: AgentSessionSource[] }> {
+    return this.request<{ sources: AgentSessionSource[] }>(
+      "GET",
+      "/developer/v1/agent-sessions/sources",
+    );
+  }
+
+  async createAgentSessionSource(req: {
+    key: string;
+    label: string;
+    runtime: string;
+    color?: string;
+    wake_url?: string;
+  }): Promise<AgentSessionSource> {
+    return this.request<AgentSessionSource>(
+      "POST",
+      "/developer/v1/agent-sessions/sources",
+      req,
+    );
+  }
+
+  async updateAgentSessionSource(
+    sourceId: string,
+    patch: { label?: string; runtime?: string; color?: string; wake_url?: string },
+  ): Promise<AgentSessionSource> {
+    return this.request<AgentSessionSource>(
+      "PATCH",
+      `/developer/v1/agent-sessions/sources/${encodeURIComponent(sourceId)}`,
+      patch,
+    );
+  }
+
+  async deleteAgentSessionSource(sourceId: string, force?: boolean): Promise<{ ok?: boolean }> {
+    const qs = force ? "?force=true" : "";
+    return this.request<{ ok?: boolean }>(
+      "DELETE",
+      `/developer/v1/agent-sessions/sources/${encodeURIComponent(sourceId)}${qs}`,
+    );
+  }
+
   // ─── Internal HTTP layer ───
 
   private async request<T>(
@@ -2070,7 +2348,7 @@ export class MindClient {
     const headers: Record<string, string> = {
       "X-API-Key": this.apiKey,
       Accept: "application/json",
-      "User-Agent": "openclaw-mind/0.4.0",
+      "User-Agent": "openclaw-mind/0.9.0",
     };
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";
